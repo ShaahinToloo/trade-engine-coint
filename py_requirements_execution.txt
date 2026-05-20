@@ -1,0 +1,9 @@
+pandas
+numpy
+matplotlib
+mplfinance
+PyQt5
+jep==4.2.2
+bs4
+selenium
+MetaTrader5
