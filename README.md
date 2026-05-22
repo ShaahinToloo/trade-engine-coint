@@ -1,10 +1,11 @@
 # Trade Engine Cointegration System
 
 <!-- Whats left: 
-    Tell the reader about the workflow, what each component (Class) does.
-    Then Teach him how to run the Code under the damn ### *It doesn't work? Well, It shouldn't work! See below:*
-    Then teach him how he can run his own strategy and use the abs classes.
-    NOTE: Backtesst class must be abstracted, evey sys PATH must be set in PublicConstants.java
+    Backtest class must be abstracted.
+    Evey sys PATH must be set in PublicConstants.java, not in classes like Python.java, etc.
+
+    Note for myself: Add these ASAP
+    - some features commented in featureUtils and data.feature
 -->
 
 A modular quantitative trading engine focused on **Low Latency** and **Ease Of Use**.
@@ -16,9 +17,6 @@ This project is designed as a **Light, Modular, Fast framework**. Combining Java
 ## 📌 Project Status
 
 This project is currently in active development.
-
-> [!CAUTION]
-> This README file is not completed yet and the project is not ready to use
 
 - [x] **Backtesting layer:** working and validated
 - [ ] **Live execution layer:** under development
@@ -66,6 +64,7 @@ The project is split into two main layers:
 
 ### 1. Java Engine (`app/src/main/java/engine`)
 Responsible for:
+- Backtest & Execution Heads
 - Core execution engine
 - Strategy logic
 - Risk management
@@ -83,7 +82,7 @@ Responsible for:
 
 ---
 
-## 🧩 Components
+## 🧩 Engine Components (Java)
 
 ### Cointegration Utilities
 - Johansen test
@@ -105,7 +104,7 @@ Responsible for:
 - Strategy abstraction layer
 - Strategy-specific decision making
 
-### Data Layer
+### Data Layer (Python)
 - Data fetching and loading
 - Feature engineering
 - Feature caching
@@ -162,67 +161,19 @@ Includes:
 
 ---
 
-## 🧰 Requirements
+## 🧠 Design Philosophy
 
-### Java
-- Java 21+ recommended. You can use lower too, obviously.
-- Gradle wrapper included
-
-### Python
-Install dependencies:
-
-#### 🧪 Development environment
-
-Used for research, testing, plotting, and experimentation (appliable to any OS):
-```bash
-pip install -r py_requirements_dev.txt
-```
-
-#### 🚀 Execution environment
-
-Used for live execution and production runs (Only appliable to Windows):
-```bash
-pip install -r py_requirements_execution.txt
-```
-
-#### 🔎 What's the difference between dev and execution py reqs?
-execution contains more dependencies for live trading:
- - MetaTrader5 dependency for data fetching and order execution
- - Web dependencies for news fetching
-
-##### ⚠️ Important note on MetaTrader5:
-
-  MetaTrader5 only installs DLL dependencies by now, so its only installable in Windows environment.
-  
-  Also you may want to use Wine, KVM, QEMU or any other windows VM, hence I personally don't suggest that due to their non-stability.
-
-
----
-
-## 🚀 Running
-
-### 🖥️ Build the project
-
-```bash
-./gradlew build
-```
-
-### 🖥️ Run main system
-
-```bash
-./gradlew run
-```
-
-
-### *It doesn't work? Well, It shouldn't work! See below:*
-
+- Modular layers
+- Separation of research vs production logic
+- Statistical rigor over heuristics
+- Reproducible backtesting pipelines
+- Extensibility for future strategies and self-development
 
 ---
 
 ## 📁 Project Structure
 
-### Note:
-resource/ folders are not included in this tree.
+Note: resource/ folders are not included in this tree.
 
     app/src
     ├── main
@@ -403,33 +354,151 @@ resource/ folders are not included in this tree.
 
 ---
 
-## 🧠 Design Philosophy
+## 🧰 Requirements
 
-This system is built with:
+### Java
+- Java 21+ recommended. You can obviously use lower too.
+- Gradle wrapper included
 
-- Modular layers
+### Python
 
-- Separation of research vs production logic
+- Python version 3.10.11 is recommended
+- Install dependencies:
 
-- Statistical rigor over heuristics
+#### 🧪 Development environment
 
-- Reproducible backtesting pipelines
+Used for research, testing, plotting, and experimentation (appliable to any OS):
+```bash
+pip install -r py_requirements_dev.txt
+```
 
-- Extensibility for future strategies and self-development
+#### 🚀 Execution environment
 
----
+Used for live execution and production runs (Only appliable to Windows):
+```bash
+pip install -r py_requirements_execution.txt
+```
 
-# 🤔 Why to use this? What's the purpose?
+#### 🔎 What's the difference between dev and execution py reqs?
+execution contains more dependencies for live trading:
+ - MetaTrader5 dependency for data fetching and order execution
+ - Web dependencies for news fetching
 
-- 
+>[!WARNING]
+>**⚠️ Important note on MetaTrader5:**
+>
+>MetaTrader5 only installs DLL dependencies by now, so its only installable in Windows environment.\
+>Also you may want to use Wine, KVM, QEMU or any other windows VM, hence I personally don't suggest that due to their non-stability.
 
 ---
 
 ## ⚠️ Disclaimer
 
-*Note that No financial advice is provided.*
-
+*Note that No financial advice is provided.*\
 This project is for **Saving Time** and your **Nerves**.
+
+---
+
+## 🚀 Running
+
+### 🖥️ Just do
+
+```bash
+./gradlew run
+```
+
+This will build first, then runs. If you just need build do `build` instead of `run`.
+
+### *It doesn't work? Well, It shouldn't work! See below:*
+
+You must set these paths:
+- Set python's jep (v4.2.2) in build.gradle.kts file.
+- Set paths in engine.constants.PublicConstants.java
+
+If you set these you are all set. But in case if you got some other path problems in python files or jep invoking, just hardcode paths from your root (X:\\ or /), Don't do ~
+
+> [!TIP]
+> If you keep getting jep problems, you should use a python venv
+
+---
+
+## 📐 Workflow & Wiring
+
+Read this part if you are curious about the project or you want to use it.
+
+This project's parts are very modular, means that you can easily swap strategies, tune hyper-params and switch from backtest to execution.\
+Through the workflow, we have 3 main parts. These parts are logic-based, not data-based codes.\
+
+### Head <-> Core <-> Logic
+
+#### Head
+
+- **What is a Head?**
+  - Head is basically the upper layer of the project.
+  - Head calls a Core, it Must not call a Logic.
+
+- Head handles the HeadState, logging objects, and your custom functionalities.
+- HeadState is a struct class in the heads package. It's responsible for holding tracking metrics, post metrics and sliced auto-updatable data arrays.
+
+- *Examples:*
+  - Parent: Backtest.java
+  - Child : BBBacktest.java
+
+  - Parent: ExecutionEngine.java
+  - Child : BBExecutionEngine.java
+
+#### Core
+
+- **What is a Core?**
+  - Core is basically the middle layer of the project.
+  - Core gets called by a Head & Core calls a Logic.
+
+- Gets the new price on each processCandle()
+- Outs void for abstraction. But you must fetch it's internal TradeContext Class fields:
+  - Core.TradeContext.trade -> (no new trades) If (trade is null) else (there is a new trade)
+  - Core.TradeContext.tradeIndicesToEliminate ->
+    - Length equals to your TradeManager.openTrades list
+    - This is a binary array, contains only 0 & 1
+    - If at index **x**, the value is 0. Means that this trade must still be open
+    - Else If at index **x**, the value is 1. Means that this trade must be closed NOW!
+
+- *Examples:*
+  - Parent: Core.java
+  - Child : BBCore.java
+
+#### Logic
+
+- **What is a Logic?**
+  - It's the trading strategy (Handles Entry and Exit)
+  - Logic is basically the lower layer of the project.
+  - Logic gets called by a Core.
+
+- Logic is a dumb class. Means that it doesn't know anything about the global data arrays.
+- So the Portfolio Matrix must be passed to it on each call via reValue()
+
+- *Examples:*
+  - Parent: Logic.java
+  - Child : BBLogic.java
+
+---
+
+## 🔨 Feature Engineering
+
+Currently, the feature engineering parts work correctly.\
+There are no issues, but it can be hard to implement new features right now. I'm currently working on execution and feature engineening too to make it easy to use.
+
+If you add a feature to FE classes, they can be accessed via PublicConstants class global Maps.\
+There are some features commented out in data.feature package classes, just uncomment them to use them.
+
+To add new features:
+- Add its key in package featureUtils
+- Add itself in package data.feature
+
+classes with KeyWord **Main** contains the main features derived from price.\
+eg: ATR, SMA, RSI, ...
+
+classes with KeyWord **Derived** contains the drived features of the main features.\
+eg: slope, pctChange, absolute, ...
 
 ---
 
