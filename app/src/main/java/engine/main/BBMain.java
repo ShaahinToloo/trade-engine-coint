@@ -1,7 +1,7 @@
 package engine.main;
 
 import engine.constants.BacktestConstants;
-import engine.heads.Backtest;
+import engine.heads.BBBacktest;
 
 public class BBMain extends Main {
 
@@ -13,7 +13,7 @@ public class BBMain extends Main {
 
 		BBMain app = new BBMain();
 
-		Backtest backtest = new Backtest(app.A, app.B);
+		BBBacktest backtest = new BBBacktest(app.A, app.B);
 
 		System.out.println("Java --BackTest Started in 'BBMain'");
 

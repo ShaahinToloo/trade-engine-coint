@@ -17,10 +17,10 @@ import engine.state.EquityTracker;
 import engine.trade.Trade;
 import engine.trade.TradeManager;
 
-public class Backtest {
+public abstract class Backtest {
 	public final HeadState headState = new HeadState();
 
-	private final DataLogger logger = new DataLogger(BacktestConstants.MAIN_FOLDER + "/");
+	protected final DataLogger logger = new DataLogger(BacktestConstants.MAIN_FOLDER + "/");
 
 	public Backtest(double[][][] mohlcv, List<String> dateTimeIndex) {
 		headState.market.datetimeIndex = dateTimeIndex;
@@ -177,7 +177,7 @@ public class Backtest {
 			TradeManager.clearRecentClosedTrades();
 
 			updatePortfolioTracking(
-					core,
+					cyP,
 					i);
 		}
 		core.flushLastRows();
@@ -204,7 +204,7 @@ public class Backtest {
 	 * Stores latest portfolio-related series values.
 	 */
 	private void updatePortfolioTracking(
-			Core core,
+			double[][] yPort,
 			int i) {
 
 		if (i != BacktestConstants.SEQ_LENGTH) {
@@ -218,18 +218,18 @@ public class Backtest {
 		} else {
 
 			System.arraycopy(
-					core.yPort[0],
+					yPort[0],
 					0,
 					headState.indicators.yPortBid,
 					0,
-					core.yPort[0].length);
+					yPort[0].length);
 
 			System.arraycopy(
-					core.yPort[1],
+					yPort[1],
 					0,
 					headState.indicators.yPortAsk,
 					0,
-					core.yPort[1].length);
+					yPort[1].length);
 		}
 	}
 
@@ -255,24 +255,7 @@ public class Backtest {
 	/**
 	 * Initializes Core and prints initialization timing.
 	 */
-	private Core initializeCore(double[][] priceMatrix,
-			List<String> dateTimeSlice) {
-
-		long startCore = System.nanoTime();
-
-		var core = new BBCore(
-				priceMatrix,
-				dateTimeSlice,
-				logger.getRunPath(),
-				BacktestConstants.ENTERY_Z_SCORE,
-				BacktestConstants.EXIT_Z_SCORE);
-
-		ProgressReporter.printElapsedNanoTime(
-				System.nanoTime() - startCore,
-				"Initialization");
-
-		return core;
-	}
+	protected abstract Core initializeCore(double[][] priceMatrix, List<String> dateTimeSlice);
 
 	private void handleProgressReporting(int i) {
 		if (i % headState.perf.reportPeriod == 0) {

@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import engine.constants.BacktestConstants;
-import engine.heads.Backtest;
+import engine.heads.BBBacktest;
+import engine.heads.HeadState;
 import engine.main.BBMain;
 
 public class HyperparameterTuner {
@@ -54,10 +55,10 @@ public class HyperparameterTuner {
 
                         overrideConstants(e1, e2, seq, period);
 
-                        Backtest bt = new Backtest(loadA(), loadB());
+                        BBBacktest bt = new BBBacktest(loadA(), loadB());
                         bt.start();
 
-                        double score = score(bt);
+                        double score = score(bt.headState);
 
                         Result r = new Result(e1, e2, seq, period, score);
                         results.add(r);
@@ -106,9 +107,7 @@ public class HyperparameterTuner {
         BacktestConstants.TESTS_PERIOD = period;
     }
 
-    private double score(Backtest bt) {
-        var hs = bt.headState;
-
+    private double score(HeadState hs) {
         return hs.risk.sharpe
                 + 0.5 * hs.risk.equityCalmar
                 + 0.2 * hs.risk.ev
