@@ -15,10 +15,10 @@ public class BacktestDataLoader {
 		double[][][] output = null;
 
 		try (SharedInterpreter interp = new SharedInterpreter()) {
-			//interp.eval("import sys");
-			//interp.eval("sys.path.insert(0, '/home/arch/TradeEngine_recalibrated/app/src/main/java/engine/data/fetch')");
+			interp.eval("import sys");
+			interp.eval("sys.path.insert(0, 'app/src/main/java/engine/data/fetch')");
 
-			String pythonPath = "/home/arch/trade-engine-coint/tools/src/python/fetch/load_csv_data.py";
+			String pythonPath = "../tools/python/src/fetch/load_csv_data.py";
 			interp.runScript(pythonPath);
 
 			interp.invoke("prepareData");

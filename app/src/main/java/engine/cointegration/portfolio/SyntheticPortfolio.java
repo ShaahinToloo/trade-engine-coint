@@ -37,12 +37,11 @@ public class SyntheticPortfolio {
 
     /**
      * 
-     * @param jr
      * @param xBid
      * @param spreads
      * @return [0] == Bid && [1] == Ask
      */
-    public static double[][] yPort(JohansenResult jr, double[][] xBid, double[] spreads, double[] beta) {
+    public static double[][] yPort(double[][] xBid, double[] spreads, double[] beta) {
         // Compute yPort
         double[][] xAsk = SyntheticPortfolio.computeAskPrice(xBid, spreads);
 

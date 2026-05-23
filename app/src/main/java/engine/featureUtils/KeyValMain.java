@@ -8,6 +8,9 @@ public class KeyValMain {
     public static final String CLOSE = "Close";
     public static final String VOLUME = "Volume";
 
+    public static final String SMA_2_YPORT = KeyGen.build().type("sma").period(2).source("yPort").build();
+    public static final String SMA_3_SMA_2_YPORT = KeyGen.build().type("sma").period(3).source("simpleMovingAverage_yPort_2").build();
+
     static {
     }
 }

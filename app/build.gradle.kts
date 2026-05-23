@@ -24,7 +24,7 @@ application {
     mainClass.set("engine.main.BBMain")
     //mainClass.set("engine.tuning.HyperparameterTuner")
     applicationDefaultJvmArgs = listOf(
-        //"-Djava.library.path=/home/arch/TradeEngine_recalibrated/.venv/lib/python3.10/site-packages/jep",
+        //"-Djava.library.path=/home/arch/trade-engine-coint/.venv/lib/python3.10/site-packages/jep",
         // "-XX:+UseSerialGC",
         // "-XX:+UseZGC",
         "-XX:+AlwaysPreTouch",

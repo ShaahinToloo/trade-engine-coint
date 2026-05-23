@@ -12,10 +12,10 @@ public class Python {
 
     public Python(List<String> symbols) throws JepException {
         SharedInterpreter interp = new SharedInterpreter();
-        //interp.eval("import sys");
-        //interp.eval("sys.path.insert(0, '/home/arch/TradeEngine_recalibrated/app/src/main/java/engine/execution')");
+        interp.eval("import sys");
+        interp.eval("sys.path.insert(0, 'app/src/main/java/engine/execution')");
 
-        String pythonPath = "/home/arch/trade-engine-coint/tools/python/src/execution/pythonMethods.py";
+        String pythonPath = "../tools/python/src/execution/pythonMethods.py";
         interp.runScript(pythonPath);
 
         this.interp = interp;

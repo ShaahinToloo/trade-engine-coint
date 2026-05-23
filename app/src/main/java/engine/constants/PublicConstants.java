@@ -20,8 +20,12 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
     // provider has a 2-sided commission, you must multiply
     // this nunmber by 2 in here. If you dont know what is a
     // 2 or 1 sided commission is. DO ASK an AI NOW!
-    public static final double[] COMMISION_PER_UNIT = new double[3];
+    public static final double[] COMMISION_PER_UNIT = new double[10];
     private static final boolean TWO_SIDED_COMM = false;
+    
+	// Order matters && for reversed currencies recompute spread manually and put it
+	// here
+    public static final double[] SPREADS = new double[] { 0.00003, 0.00001, 0.00003, 0, 0, 0, 0, 0, 0, 0 };
 
     public static double ENTERY_Z_SCORE = 2.0;
     public static double EXIT_Z_SCORE = -2.0; // '-' sign means "in the opposite side"

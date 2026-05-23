@@ -1,13 +1,5 @@
 # Trade Engine Cointegration System
 
-<!-- Whats left: 
-    Backtest class must be abstracted.
-    Evey sys PATH must be set in PublicConstants.java, not in classes like Python.java, etc.
-
-    Note for myself: Add these ASAP
-    - some features commented in featureUtils and data.feature
--->
-
 A modular quantitative trading engine focused on **Low Latency** and **Ease Of Use**.
 
 This project is designed as a **Light, Modular, Fast framework**. Combining Java-based engine infrastructure with Python-based data and order handling, and analysis tooling.
@@ -45,7 +37,7 @@ The `Core` layer is designed to handle the full workflow internally. It only nee
 - Trade entry generation
 - Trade close generation
 
-On my machine (`i7-2600K`), the average `Core` execution time is around **60 microseconds**.
+On my machine (`i7-2600K`), the average `Core` execution time is around **30 microseconds**.
 
 The current implementation is already fast enough for second-frequency trading. The main bottleneck is MT5 integration, which can later be replaced with a direct Java API implementation for lower overhead and a fully Java-native execution path.
 
@@ -414,11 +406,21 @@ This will build first, then runs. If you just need build do `build` instead of `
 You must set these paths:
 - Set python's jep (v4.2.2) in build.gradle.kts file.
 - Set paths in engine.constants.PublicConstants.java
+- Set path to your portfolio csv files in tools/python/src/fetch/load_csv_data.py at Path("/home/arch/SymbolsData/Portfolio")
 
 If you set these you are all set. But in case if you got some other path problems in python files or jep invoking, just hardcode paths from your root (X:\\ or /), Don't do ~
 
 > [!TIP]
-> If you keep getting jep problems, you should use a python venv
+> You should use a python venv
+
+Now the project is set up to run.\
+But if you got some indexing exceptions, try playing with variables:
+- MR_LOOKBACK
+- SEQ_LENGTH
+- TESTS_PERIOD
+in constants.PublicConstants
+
+If you face any other issues and can't fix it. Ask me.
 
 ---
 
@@ -485,10 +487,12 @@ Through the workflow, we have 3 main parts. These parts are logic-based, not dat
 ## 🔨 Feature Engineering
 
 Currently, the feature engineering parts work correctly.\
-There are no issues, but it can be hard to implement new features right now. I'm currently working on execution and feature engineening too to make it easy to use.
+There are no issues, but it can be hard to implement new features right now. I'm currently working on it's ease-of-use.
 
 If you add a feature to FE classes, they can be accessed via PublicConstants class global Maps.\
-There are some features commented out in data.feature package classes, just uncomment them to use them.
+There are some features commented out in data.feature package, just uncomment them to use them.\
+For MainFeatures, search for \[M1\] and \[M2\] and \[M3\] in the package.\
+For FeatureDerivator, search for \[D1\] and \[D2\] in the package.
 
 To add new features:
 - Add its key in package featureUtils
@@ -499,6 +503,8 @@ eg: ATR, SMA, RSI, ...
 
 classes with KeyWord **Derived** contains the drived features of the main features.\
 eg: slope, pctChange, absolute, ...
+
+**ONLY** FeatureInitializer calls and handles the FeatureDerivator & MainFeatures classes.
 
 ---
 

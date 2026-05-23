@@ -20,7 +20,7 @@ import engine.trade.TradeManager;
 public class Backtest {
 	public final HeadState headState = new HeadState();
 
-	private final DataLogger logger = new DataLogger("/home/arch/data/BackTest/" + BacktestConstants.MAIN_FOLDER + "/");
+	private final DataLogger logger = new DataLogger(BacktestConstants.MAIN_FOLDER + "/");
 
 	public Backtest(double[][][] mohlcv, List<String> dateTimeIndex) {
 		headState.market.datetimeIndex = dateTimeIndex;

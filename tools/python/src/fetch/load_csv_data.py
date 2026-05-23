@@ -1,10 +1,7 @@
-import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
-sys.path.insert(0, "/home/void/TradeEngine/app/src/main/java/engine/data/fetch")
 
 base_path = Path("/home/arch/SymbolsData/Portfolio")
 df_paths = sorted(

@@ -7,7 +7,6 @@ import java.util.List;
 import engine.cointegration.halflife.LookbackCalculator;
 import engine.cointegration.johansen.JohansenResult;
 import engine.cointegration.johansen.JohansenTest;
-import engine.cointegration.portfolio.SyntheticPortfolio;
 import engine.constants.BacktestConstants;
 import engine.data.feature.CachedFeatureInitializer;
 import engine.logger.DataLogger;
@@ -87,7 +86,9 @@ public abstract class Core {
 		}
 
 		double[] beta = getBetaFromJr();
-		yPort = SyntheticPortfolio.yPort(jr, BacktestConstants.PRICE_MATRIX, BacktestConstants.SPREADS, beta);
+		this.yPort = this.cfi.calc_yPort(beta);
+		this.cfi.updateMainFeatures();
+
 		TradeManager.updateOpenTrades(yPort[0][yPort[0].length - 1], yPort[1][yPort[1].length - 1], beta);
 
 		/**

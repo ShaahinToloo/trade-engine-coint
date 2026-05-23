@@ -35,13 +35,16 @@ public class StateSnapshotStore {
 
     private String serialize(RiskState state) {
         // TODO
+        return "";
     }
 
     private RiskState deserialize(String state) {
         // TODO
+        return new RiskState();
     }
 
     private String getLastFile() {
         // TODO
+        return "";
     }
 }

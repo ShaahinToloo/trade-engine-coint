@@ -19,6 +19,8 @@ public class KeyValDerived {
     public static final String MINS_TO_LONDON_CLOSE;
     public static final String MINS_TO_NY_CLOSE;
 
+    public static final String RAD_SLOPE_YPORT;
+
     static {
         // Time Features
         HOUR_SIN = KeyGen.build().type("time").source("hour").target("sin").build();
@@ -38,5 +40,7 @@ public class KeyValDerived {
         MINS_TO_TOKYO_CLOSE = KeyGen.build().type("session_time").source("tokyo").target("to_close").build();
         MINS_TO_LONDON_CLOSE = KeyGen.build().type("session_time").source("london").target("to_close").build();
         MINS_TO_NY_CLOSE = KeyGen.build().type("session_time").source("ny").target("to_close").build();
+
+        RAD_SLOPE_YPORT = KeyGen.build().type("radSlope").source("yPort").build();
     }
 }

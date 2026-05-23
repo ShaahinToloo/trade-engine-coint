@@ -10,7 +10,7 @@ CSV_PATH = str(input("Full Path to desired log folder: "))
 
 
 def check_equity():
-    df = pd.read_csv(os.path.join(CSV_PATH, "/Equity.csv"))
+    df = pd.read_csv(os.path.join(CSV_PATH, "Equity.csv"))
     eq = df["Equity"]
 
     plt.figure(figsize=(12, 6))
@@ -20,7 +20,7 @@ def check_equity():
 
 
 def check_Requity():
-    df = pd.read_csv(os.path.join(CSV_PATH, "/RealisedEquity.csv"))
+    df = pd.read_csv(os.path.join(CSV_PATH, "RealisedEquity.csv"))
     eq = df["RealisedEquity"]
 
     plt.figure(figsize=(12, 6))
@@ -30,7 +30,7 @@ def check_Requity():
 
 
 def check_price():
-    df = pd.read_csv(os.path.join(CSV_PATH, "/Equity.csv"))
+    df = pd.read_csv(os.path.join(CSV_PATH, "allTrades.csv"))
     df = df.iloc[:]
 
     price = df["price"]
