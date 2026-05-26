@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-base_path = Path("/home/arch/SymbolsData/Portfolio")
+base_path = Path("/home/ubuntu/resources/SymbolsData/Portfolio")
 df_paths = sorted(
     [
         f
@@ -147,7 +147,7 @@ def prepareData():
     dfs = []
     for i, path in enumerate(df_paths):
         df = pd.read_csv(path, sep=DATAFRAME_SEAPARTOR)
-        df = df.iloc[:int(len(df)*1)] # !!!
+        df = df.iloc[ int( len(df) * 0.0 ) : int( len(df) * 1.0 ) ] # !!!
         dfs.append(df)
 
     dfs = _parse_indices(dfs)

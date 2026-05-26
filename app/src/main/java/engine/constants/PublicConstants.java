@@ -9,7 +9,7 @@ import java.util.Map;
 import engine.timeUtils.TimeUtils;
 
 public sealed class PublicConstants permits ExecutionConstants, BacktestConstants {
-    public static final String MAIN_FOLDER = "/home/arch/data/BackTest/BBMR/";
+    public static final String MAIN_FOLDER = "/home/ubuntu/resources/outputs/data/BackTest/BBMR/";
 
     public static final String DATA_LOG_PATH = MAIN_FOLDER;
 
@@ -27,8 +27,8 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
 	// here
     public static final double[] SPREADS = new double[] { 0.00003, 0.00001, 0.00003, 0, 0, 0, 0, 0, 0, 0 };
 
-    public static double ENTERY_Z_SCORE = 2.0;
-    public static double EXIT_Z_SCORE = -2.0; // '-' sign means "in the opposite side"
+    public static double ENTERY_Z_SCORE = 3.5;
+    public static double EXIT_Z_SCORE = -1.0; // '-' sign means "in the opposite side"
 
     public static final int MR_LOOKBACK = 120;
     public static int SEQ_LENGTH = 320;
@@ -55,7 +55,7 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
 	public static final double TIMEFRAME_MINUTES = 1;
 
     static {
-        double val = 0.00007;
+        double val = 0.00003;
         Arrays.fill(COMMISION_PER_UNIT, ((TWO_SIDED_COMM) ? val * 2 : val));
     }
 
