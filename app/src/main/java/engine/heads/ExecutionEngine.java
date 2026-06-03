@@ -1,9 +1,11 @@
 package engine.heads;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 import engine.constants.BacktestConstants;
+import engine.constants.ExecutionConstants;
 import engine.constants.PublicConstants;
 import engine.execution.OrderGateway;
 import engine.execution.RiskState;
@@ -15,8 +17,8 @@ import engine.timeUtils.SleeperUtils;
 public abstract class ExecutionEngine implements Runnable {
     protected final HeadState headState = new HeadState();
 
-    protected final InfoLogger log = new InfoLogger(PublicConstants.INFO_LOG_PATH, PublicConstants.INFO_LOG_NAME);
-    protected final DataLogger logger = new DataLogger(PublicConstants.DATA_LOG_PATH);
+    protected final InfoLogger log = new InfoLogger(Path.of(PublicConstants.INFO_LOG_PATH, "Execution/").toString(), PublicConstants.INFO_LOG_NAME);
+    protected final DataLogger logger = new DataLogger(Path.of(PublicConstants.DATA_LOG_PATH, "Execution/").toString());
 
     private final RiskState riskState = new RiskState();
     private final OrderGateway gateway = new OrderGateway();
@@ -24,7 +26,7 @@ public abstract class ExecutionEngine implements Runnable {
 
     public ExecutionEngine(double[][][] mohlcv, List<String> dateTimeIndex) {
         headState.market.datetimeIndex = dateTimeIndex;
-        headState.market.length = BacktestConstants.DATA_LENGTH;
+        headState.market.length = ExecutionConstants.DATA_LENGTH;
 
         initializeTimerArray();
         initializePortfolioBuffers();
@@ -83,6 +85,7 @@ public abstract class ExecutionEngine implements Runnable {
 
         int backoffMs = 500;
         callDesiredCore();
+        feedInitializationArray();
 
         while (true) {
             try {
@@ -153,6 +156,10 @@ public abstract class ExecutionEngine implements Runnable {
         snapshotStore.save(riskState);
     }
 
+    protected void feedInitializationArray() {
+        
+    }
+
     protected abstract void callDesiredCore();
 
     protected abstract void processExecutionCycle();
@@ -163,7 +170,7 @@ public abstract class ExecutionEngine implements Runnable {
     protected abstract void initializeCore(double[][] priceMatrix,
             List<String> dateTimeSlice);
 
-    protected double[][] buildInitialPriceMatrix() {
+    protected double[][] fetchAndMakeInitialPriceMatrix() {
         double[][] sliced = new double[BacktestConstants.SEQ_LENGTH][headState.market.priceMatrix[0].length];
 
         for (int i = 0; i < sliced.length; i++) {
@@ -178,7 +185,7 @@ public abstract class ExecutionEngine implements Runnable {
         return sliced;
     }
 
-    protected List<String> buildInitialDatetimeSlice() {
+    protected List<String> fetchAndMakeInitialDatetimeSlice() {
         return headState.market.datetimeIndex.subList(0, BacktestConstants.SEQ_LENGTH);
     }
 }

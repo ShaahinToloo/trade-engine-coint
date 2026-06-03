@@ -1,6 +1,5 @@
 package engine.main;
 
-import engine.constants.BacktestConstants;
 import engine.heads.BBBacktest;
 
 public class BBMain extends Main {
@@ -21,8 +20,7 @@ public class BBMain extends Main {
 
 		backtest.getResults(
 				true,
-				"/home/arch/data",
-				"BackTest/"+BacktestConstants.MAIN_FOLDER);
+				"/home/arch/data");
 
 		System.out.println("\n\t[--- Program Finished ---]");
 	}

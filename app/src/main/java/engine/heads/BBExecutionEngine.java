@@ -7,20 +7,24 @@ import engine.core.BBCore;
 import engine.reporter.ProgressReporter;
 
 public class BBExecutionEngine extends ExecutionEngine {
-    BBCore core;
-    
+    private BBCore core;
+
+    private double[] yPortBid = headState.indicators.yPortBid;
+    private double[] yPortAsk = headState.indicators.yPortAsk;
+
+
     public BBExecutionEngine(double[][][] mohlcv, List<String> datetimeIndex) {
         super(mohlcv, datetimeIndex);
     }
 
     @Override
     protected void processExecutionCycle() {
-        // TODO
+        
     }
 
     @Override
     protected void callDesiredCore() {
-        initializeCore(super.buildInitialPriceMatrix(), super.buildInitialDatetimeSlice());
+        initializeCore(super.fetchAndMakeInitialPriceMatrix(), super.buildInitialDatetimeSlice());
     }
 
     @Override

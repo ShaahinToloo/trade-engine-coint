@@ -9,7 +9,7 @@ import java.util.Map;
 import engine.timeUtils.TimeUtils;
 
 public sealed class PublicConstants permits ExecutionConstants, BacktestConstants {
-    public static final String MAIN_FOLDER = "/home/ubuntu/resources/outputs/data/BackTest/BBMR/";
+    public static final String MAIN_FOLDER = "/home/ubuntu/resources/outputs/data/BBMR/";
 
     public static final String DATA_LOG_PATH = MAIN_FOLDER;
 
@@ -53,6 +53,9 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
     public static final double EPSILON = 1e-9;
 	public static final int EV_BINS = 20;
 	public static final double TIMEFRAME_MINUTES = 1;
+
+	public static int NUM_SERIES; // Will be set in Main.java
+	public static int DATA_LENGTH; // Will be set in Main.java
 
     static {
         double val = 0.00003;

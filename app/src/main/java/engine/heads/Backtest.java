@@ -1,5 +1,6 @@
 package engine.heads;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +21,7 @@ import engine.trade.TradeManager;
 public abstract class Backtest {
 	public final HeadState headState = new HeadState();
 
-	protected final DataLogger logger = new DataLogger(BacktestConstants.MAIN_FOLDER + "/");
+	protected final DataLogger logger = new DataLogger(Path.of(BacktestConstants.MAIN_FOLDER, "BackTest/").toString());
 
 	public Backtest(double[][][] mohlcv, List<String> dateTimeIndex) {
 		headState.market.datetimeIndex = dateTimeIndex;
@@ -41,7 +42,7 @@ public abstract class Backtest {
 	 */
 	private void initializePortfolioBuffers() {
 		var dataLength = headState.market.length;
-	
+
 		headState.indicators.yPortBid = new double[dataLength];
 		headState.indicators.yPortAsk = new double[dataLength];
 		headState.indicators.movingAvg = new double[dataLength];
@@ -109,12 +110,12 @@ public abstract class Backtest {
 		computeRiskMetrics();
 		computeTradeMetrics();
 		computePerformanceMetrics();
-
 	}
 
 	private void computeRiskMetrics() {
 		headState.risk.equityDrawdown = RiskMetrics.calculateDrawdown(headState.portfolio.equity);
-		headState.risk.equityCalmar = RiskMetrics.calculateCalmarRatio(TradeManager.closedTrades, headState.portfolio.equity);
+		headState.risk.equityCalmar = RiskMetrics.calculateCalmarRatio(TradeManager.closedTrades,
+				headState.portfolio.equity);
 		headState.risk.realisedDrawdown = RiskMetrics.calculateDrawdown(headState.portfolio.realisedEquity);
 	}
 
@@ -146,7 +147,8 @@ public abstract class Backtest {
 			handleProgressReporting(i);
 
 			// Get the currentNewPrice from the globalScoped array
-			System.arraycopy(headState.market.priceMatrix[i], 0, headState.buffers.newPrice, 0, BacktestConstants.NUM_SERIES);
+			System.arraycopy(headState.market.priceMatrix[i], 0, headState.buffers.newPrice, 0,
+					BacktestConstants.NUM_SERIES);
 
 			// Call CORE
 			processCoreCandle(
@@ -259,7 +261,8 @@ public abstract class Backtest {
 
 	private void handleProgressReporting(int i) {
 		if (i % headState.perf.reportPeriod == 0) {
-			ProgressReporter.printProgressMeanSpeed(i, headState.market.length, headState.perf.coreSpeedRange, headState.perf.start, "Core");
+			ProgressReporter.printProgressMeanSpeed(i, headState.market.length, headState.perf.coreSpeedRange,
+					headState.perf.start, "Core");
 			headState.perf.rangeIdx = 0;
 		}
 	}
@@ -287,7 +290,8 @@ public abstract class Backtest {
 	}
 
 	private void updateEquityState(int i) {
-		headState.portfolio.equity = EquityTracker.trackEquity(TradeManager.openTrades, headState.portfolio.equity, i, false);
+		headState.portfolio.equity = EquityTracker.trackEquity(TradeManager.openTrades, headState.portfolio.equity, i,
+				false);
 	}
 
 	private void tradeEliminator(int[] tradeIndicesToEliminate, int i) {
@@ -307,7 +311,7 @@ public abstract class Backtest {
 	}
 
 	// Log
-	public void getResults(boolean doSave, String folderPath, String folderName) {
+	public void getResults(boolean doSave, String folderPath) {
 		String report = BacktestReporter.build(
 				TradeManager.closedTrades,
 				RiskMetrics.biggestLoss(TradeManager.closedTrades),
@@ -321,7 +325,8 @@ public abstract class Backtest {
 			logger.logBacktestResult(report, "backtestResults.txt");
 			logger.logTrades("allTrades.csv", TradeManager.closedTrades, headState.market.length,
 					headState.indicators.yPortBid,
-					new double[][] { headState.indicators.yPortAsk, headState.indicators.movingAvg, headState.indicators.std },
+					new double[][] { headState.indicators.yPortAsk, headState.indicators.movingAvg,
+							headState.indicators.std },
 					List.of("priceAsk", "mavg", "std"),
 					headState.market.datetimeIndex);
 

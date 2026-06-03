@@ -15,7 +15,7 @@ class Watchdog implements Runnable {
 
     private static final long TIMEOUT_MS = 5000;
 
-    InfoLogger log = new InfoLogger(PublicConstants.INFO_LOG_PATH, PublicConstants.INFO_LOG_NAME);
+    InfoLogger log = new InfoLogger(Path.of(PublicConstants.INFO_LOG_PATH, "Execution/").toString(), PublicConstants.INFO_LOG_NAME);
 
     public Watchdog(double[][][] mohlcv, List<String> datetimeIndex) {
         this.engine = new BBExecutionEngine(mohlcv, datetimeIndex);
