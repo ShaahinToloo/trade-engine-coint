@@ -28,16 +28,13 @@ public abstract class ExecutionEngine implements Runnable {
 
     protected JEPLayer jepLayer = new JEPLayer();
 
+    protected int index = PublicConstants.SEQ_LENGTH;
+
     public ExecutionEngine() {
         headState.market.length = ExecutionConstants.SEQ_LENGTH;
 
-        initializeTimerArray();
         initializePortfolioBuffers();
         initializeEquityBuffers();
-    }
-
-    private void initializeTimerArray() {
-        headState.perf.coreSpeedRange = new long[headState.perf.reportPeriod];
     }
 
     /**
@@ -85,9 +82,9 @@ public abstract class ExecutionEngine implements Runnable {
 
     @Override
     public void run() {
-
         int backoffMs = 500;
-        callDesiredCore();
+
+        initializeCore();
         feedInitializationArray();
 
         while (true) {
@@ -119,10 +116,7 @@ public abstract class ExecutionEngine implements Runnable {
 
                 backoffMs = 500;
 
-                // } catch (InterruptedException e) {
-                // Thread.currentThread().interrupt();
-                // gateway.cancelAll();
-                // break;
+                index++;
 
             } catch (ArithmeticException | IllegalArgumentException | IllegalMonitorStateException
                     | IllegalStateException e) { // Recoverable (RecoverableException)
@@ -177,39 +171,32 @@ public abstract class ExecutionEngine implements Runnable {
     }
 
     private void proccessNewPrice() {
-        var priceMatrix = headState.market.priceMatrix;
         double[][][] newData = jepLayer.getNewData();
 
         // Shift price matrix left and append new data
-        for (int i = 0; i < headState.market.length - 1; i++) {
-            System.arraycopy(priceMatrix[i + 1], 0, priceMatrix[i], 0,
-                    priceMatrix[i].length);
-        }
-
-        for (int j = 0; j < priceMatrix[0].length; j++) {
-            priceMatrix[priceMatrix.length - 1][j] = newData[j][3][0];
+        for (int i = 0; i < headState.buffers.newPrice.length; i++) {
+            headState.buffers.newPrice[i] = newData[0][3][0];
         }
     }
 
     private void processNewIndex() {
-        var len = headState.market.length;
-        var datetimeIndex = headState.market.datetimeIndex;
         List<String> newIndex = jepLayer.getNewIndex();
 
-        // Shift index left and append new index
-        for (int i = 0; i < len - 1; i++) {
-            datetimeIndex.set(i, datetimeIndex.get(i + 1));
-        }
-        datetimeIndex.set(len - 1, newIndex.get(0));
+        headState.buffers.datetimeIndex = newIndex.get(0);
     }
-
-    protected abstract void callDesiredCore();
 
     protected abstract void processExecutionCycle();
 
     /**
      * Initializes Core and prints initialization timing.
      */
-    protected abstract void initializeCore(double[][] priceMatrix,
-            List<String> dateTimeSlice);
+    protected abstract void initializeCore();
+
+    /**
+     * Processes a new candle through Core and tracks execution latency.
+     *
+     * @param core      core engine instance
+     * @param timestamp current timestamp
+     */
+    protected abstract void processCoreCandle();
 }

@@ -3,6 +3,7 @@ package engine.heads;
 import java.util.List;
 
 import engine.constants.BacktestConstants;
+import engine.constants.PublicConstants;
 
 public final class HeadState {
 
@@ -64,12 +65,14 @@ public final class HeadState {
         public long stop;
 
         public long[] coreSpeedRange;
+        public long currCoreSpeed;
         public int rangeIdx;
 
-        public final int reportPeriod = BacktestConstants.DATA_LENGTH / 10;
+        public final int reportPeriod = PublicConstants.DATA_LENGTH / 10;
     }
 
     public final class RuntimeBuffers {
-        public final double[] newPrice = new double[BacktestConstants.NUM_SERIES];
+        public final double[] newPrice = new double[PublicConstants.NUM_SERIES];
+        public String datetimeIndex;
     }
 }

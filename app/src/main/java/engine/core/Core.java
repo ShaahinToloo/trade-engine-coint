@@ -7,7 +7,7 @@ import java.util.List;
 import engine.cointegration.halflife.LookbackCalculator;
 import engine.cointegration.johansen.JohansenResult;
 import engine.cointegration.johansen.JohansenTest;
-import engine.constants.BacktestConstants;
+import engine.constants.PublicConstants;
 import engine.data.feature.CachedFeatureInitializer;
 import engine.logger.DataLogger;
 import engine.mathUtils.normalization.VectorNormalization;
@@ -65,7 +65,7 @@ public abstract class Core {
 	public Core(double[][] priceMatrix, List<String> datetimeIndex, Path runPath) {
 		this.cfi = new CachedFeatureInitializer(priceMatrix, datetimeIndex);
 		this.logger = new DataLogger(runPath, "AllFeaturesTrades.csv");
-		this.close0 = BacktestConstants.globalFeatureMap.get("close0");
+		this.close0 = PublicConstants.globalFeatureMap.get("close0");
 	}
 
 	/**
@@ -76,13 +76,13 @@ public abstract class Core {
 	 * @return Object[] { null || double[] , null || int[] }
 	 */
 	public void processCandle(double[] newPrice, String datetimeIndex, List<Trade> openTrades, int outerLoopIdx) {
-		boolean periodCond = this.methodCall % BacktestConstants.TESTS_PERIOD == 0;
+		boolean periodCond = this.methodCall % PublicConstants.TESTS_PERIOD == 0;
 
 		this.cfi.newPrice(newPrice, datetimeIndex);
 		this.validateNewPrice(newPrice);
 
-		if (changeJR || (outerLoopIdx == BacktestConstants.SEQ_LENGTH)) {
-			jr = JohansenTest.johansen(BacktestConstants.PRICE_MATRIX);
+		if (changeJR || (outerLoopIdx == PublicConstants.SEQ_LENGTH)) {
+			jr = JohansenTest.johansen(PublicConstants.PRICE_MATRIX);
 		}
 
 		double[] beta = getBetaFromJr();
@@ -125,8 +125,11 @@ public abstract class Core {
 	protected abstract void processStrategy();
 
 	/**
-	 * Constants.DATETIME_INDEX from Constants gets initialized at CachingMainFeatures just like Constants.PRICE_MATRIX.
-	 * They both gets updated automatically at this.cfi.newPrice(newPrice, datetimeIndex); in processCandle in class Core.
+	 * Constants.DATETIME_INDEX from Constants gets initialized at
+	 * CachingMainFeatures just like Constants.PRICE_MATRIX.
+	 * They both gets updated automatically at this.cfi.newPrice(newPrice,
+	 * datetimeIndex); in processCandle in class Core.
+	 * 
 	 * @return
 	 */
 	protected abstract boolean isWithinTradingWindow();
@@ -160,7 +163,7 @@ public abstract class Core {
 		// normalize Beta = Beta / max(|Beta|) && Apply Units
 		beta = VectorNormalization.maxAbsNorm(beta);
 		for (int i = 0; i < beta.length; i++) {
-			beta[i] *= BacktestConstants.FIXED_TRADE_UNITS;
+			beta[i] *= PublicConstants.FIXED_TRADE_UNITS;
 		}
 		return beta;
 	}
