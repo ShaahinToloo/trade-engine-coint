@@ -1,4 +1,4 @@
-package engine.featureUtils;
+package engine.keyUtils;
 
 public class KeyValDerived {
     public static final String HOUR_SIN;

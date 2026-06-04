@@ -4,7 +4,7 @@ import engine.constants.ExecutionConstants;
 import engine.logger.InfoLogger;
 
 public class OrderGateway {
-    Python py = null;
+    JEPLayer py = null;
 
     public void refresh() {
         // TODO
@@ -15,7 +15,7 @@ public class OrderGateway {
             py.closeInterp();
         }
 
-        py = new Python(ExecutionConstants.SYMBOLS);
+        py = new JEPLayer(ExecutionConstants.SYMBOLS);
         py.setGMTOffest(ExecutionConstants.GMT_OFFSET);
         py.setOverallBalance((float) ExecutionConstants.INIT_BALANCE);
 

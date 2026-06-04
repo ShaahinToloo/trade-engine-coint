@@ -5,8 +5,8 @@ import java.util.List;
 
 import engine.cointegration.portfolio.SyntheticPortfolio;
 import engine.constants.PublicConstants;
-import engine.featureUtils.KeyValDerived;
-import engine.featureUtils.KeyValMain;
+import engine.keyUtils.KeyValDerived;
+import engine.keyUtils.KeyValMain;
 
 public class CachedFeatureInitializer {
 	double[][] yPort;

@@ -3,10 +3,10 @@ package engine.tuner;
 import java.util.ArrayList;
 import java.util.List;
 
+import engine.backtestMain.BBMain;
 import engine.constants.BacktestConstants;
 import engine.heads.BBBacktest;
 import engine.heads.HeadState;
-import engine.main.BBMain;
 
 public class HyperparameterTuner {
 

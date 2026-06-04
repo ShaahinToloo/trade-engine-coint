@@ -7,6 +7,7 @@ import java.util.List;
 import engine.constants.BacktestConstants;
 import engine.constants.ExecutionConstants;
 import engine.constants.PublicConstants;
+import engine.execution.JEPLayer;
 import engine.execution.OrderGateway;
 import engine.execution.RiskState;
 import engine.execution.StateSnapshotStore;
@@ -17,21 +18,22 @@ import engine.timeUtils.SleeperUtils;
 public abstract class ExecutionEngine implements Runnable {
     protected final HeadState headState = new HeadState();
 
-    protected final InfoLogger log = new InfoLogger(Path.of(PublicConstants.INFO_LOG_PATH, "Execution/").toString(), PublicConstants.INFO_LOG_NAME);
+    protected final InfoLogger log = new InfoLogger(Path.of(PublicConstants.INFO_LOG_PATH, "Execution/").toString(),
+            PublicConstants.INFO_LOG_NAME);
     protected final DataLogger logger = new DataLogger(Path.of(PublicConstants.DATA_LOG_PATH, "Execution/").toString());
 
     private final RiskState riskState = new RiskState();
     private final OrderGateway gateway = new OrderGateway();
     private final StateSnapshotStore snapshotStore = new StateSnapshotStore(log);
 
-    public ExecutionEngine(double[][][] mohlcv, List<String> dateTimeIndex) {
-        headState.market.datetimeIndex = dateTimeIndex;
-        headState.market.length = ExecutionConstants.DATA_LENGTH;
+    protected JEPLayer jepLayer = new JEPLayer();
+
+    public ExecutionEngine() {
+        headState.market.length = ExecutionConstants.SEQ_LENGTH;
 
         initializeTimerArray();
         initializePortfolioBuffers();
         initializeEquityBuffers();
-        initializePriceMatrix(mohlcv);
     }
 
     private void initializeTimerArray() {
@@ -67,17 +69,18 @@ public abstract class ExecutionEngine implements Runnable {
                 BacktestConstants.INIT_BALANCE);
     }
 
-    private void initializePriceMatrix(double[][][] mohlcv) {
+    private double[][] initializePriceMatrix(double[][][] initialData) {
         int rows = headState.market.length;
-        int cols = BacktestConstants.NUM_SERIES;
+        int cols = ExecutionConstants.NUM_SERIES;
 
-        headState.market.priceMatrix = new double[rows][cols];
+        double[][] priceMatrix = new double[rows][cols];
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                headState.market.priceMatrix[i][j] = mohlcv[j][3][i];
+                priceMatrix[i][j] = initialData[j][3][i];
             }
         }
+        return priceMatrix;
     }
 
     @Override
@@ -105,6 +108,9 @@ public abstract class ExecutionEngine implements Runnable {
                 // Wait until new price
                 SleeperUtils.sleepUntilGivenBoundary(boundary, 1);
 
+                // Fetch New Price
+                processNewData();
+
                 // Strategy + execution
                 processExecutionCycle();
 
@@ -129,7 +135,8 @@ public abstract class ExecutionEngine implements Runnable {
 
             } catch (ArrayStoreException | ClassCastException | EnumConstantNotPresentException | IllegalCallerException
                     | IndexOutOfBoundsException | NegativeArraySizeException | NullPointerException
-                    | TypeNotPresentException | UnsupportedOperationException e) { // Non-Recoverable (BrokenCodeException)
+                    | TypeNotPresentException | UnsupportedOperationException e) { // Non-Recoverable
+                                                                                   // (BrokenCodeException)
 
             } catch (Throwable t) {
 
@@ -156,8 +163,44 @@ public abstract class ExecutionEngine implements Runnable {
         snapshotStore.save(riskState);
     }
 
-    protected void feedInitializationArray() {
-        
+    private void feedInitializationArray() {
+        double[][][] initialData = jepLayer.getInitialData();
+        List<String> initialIndex = jepLayer.getInitialIndex();
+
+        headState.market.priceMatrix = initializePriceMatrix(initialData);
+        headState.market.datetimeIndex = initialIndex;
+    }
+
+    private void processNewData() {
+        proccessNewPrice();
+        processNewIndex();
+    }
+
+    private void proccessNewPrice() {
+        var priceMatrix = headState.market.priceMatrix;
+        double[][][] newData = jepLayer.getNewData();
+
+        // Shift price matrix left and append new data
+        for (int i = 0; i < headState.market.length - 1; i++) {
+            System.arraycopy(priceMatrix[i + 1], 0, priceMatrix[i], 0,
+                    priceMatrix[i].length);
+        }
+
+        for (int j = 0; j < priceMatrix[0].length; j++) {
+            priceMatrix[priceMatrix.length - 1][j] = newData[j][3][0];
+        }
+    }
+
+    private void processNewIndex() {
+        var len = headState.market.length;
+        var datetimeIndex = headState.market.datetimeIndex;
+        List<String> newIndex = jepLayer.getNewIndex();
+
+        // Shift index left and append new index
+        for (int i = 0; i < len - 1; i++) {
+            datetimeIndex.set(i, datetimeIndex.get(i + 1));
+        }
+        datetimeIndex.set(len - 1, newIndex.get(0));
     }
 
     protected abstract void callDesiredCore();
@@ -169,23 +212,4 @@ public abstract class ExecutionEngine implements Runnable {
      */
     protected abstract void initializeCore(double[][] priceMatrix,
             List<String> dateTimeSlice);
-
-    protected double[][] fetchAndMakeInitialPriceMatrix() {
-        double[][] sliced = new double[BacktestConstants.SEQ_LENGTH][headState.market.priceMatrix[0].length];
-
-        for (int i = 0; i < sliced.length; i++) {
-            System.arraycopy(
-                    headState.market.priceMatrix[i],
-                    0,
-                    sliced[i],
-                    0,
-                    headState.market.priceMatrix[0].length);
-        }
-
-        return sliced;
-    }
-
-    protected List<String> fetchAndMakeInitialDatetimeSlice() {
-        return headState.market.datetimeIndex.subList(0, BacktestConstants.SEQ_LENGTH);
-    }
 }
