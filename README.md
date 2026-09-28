@@ -1,8 +1,14 @@
-# Trade Engine Cointegration System
+# Low-Latency Modular Quantitative Cointegration Trading Engine
 
-A modular quantitative trading engine focused on **Low Latency** and **Ease Of Use**.
+A fully automated quantitative trading engine engineered for low latency and ease of use.
 
-This project is designed as a **Light, Modular, Fast framework**. Combining Java-based engine infrastructure with Python-based data and order handling, and analysis tooling.
+This project delivers a **light, fast, and modular** framework combining high-performance Java infrastructure for execution with flexible Python tooling for data pipelines, order management, and analytics.
+
+## Target Audience & Core Design
+
+Tailored specifically for quantitative researchers and quantitative developers, this framework provides a full automated, ready-to-use, end-to-end trading system out of the box.
+
+All core infrastructure—including market data ingest, order lifecycle management, risk controls, and analytical pipelines—is fully implemented. Instead of rebuilding low-latency infrastructure from scratch, quants can focus exclusively on alpha generation and mathematical model design, deploying custom strategies by following the setup steps below.
 
 ---
 
