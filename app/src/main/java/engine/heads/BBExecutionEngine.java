@@ -20,7 +20,8 @@ public class BBExecutionEngine extends ExecutionEngine {
 
         Trade trade = Core.TradeContext.trade;
         int[] tradeIndicesToEliminate = Core.TradeContext.tradeIndicesToEliminate;
-
+        tradeIndicesToEliminate = getIndicesToEliminate(tradeIndicesToEliminate);
+        
         
     }
 

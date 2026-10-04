@@ -15,7 +15,8 @@ public class OrderGateway {
             py.closeInterp();
         }
 
-        py = new JEPLayer(ExecutionConstants.SYMBOLS);
+//        py = new JEPLayer(ExecutionConstants.SYMBOLS);
+        py = new JEPLayer();
         py.setGMTOffest(ExecutionConstants.GMT_OFFSET);
         py.setOverallBalance((float) ExecutionConstants.INIT_BALANCE);
 

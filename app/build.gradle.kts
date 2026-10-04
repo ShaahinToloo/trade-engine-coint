@@ -21,7 +21,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("engine.main.BBMain")
+    mainClass.set("engine.backtestMain.BBMain")
     //mainClass.set("engine.tuning.HyperparameterTuner")
     applicationDefaultJvmArgs = listOf(
         //"-Djava.library.path=/home/arch/trade-engine-coint/.venv/lib/python3.10/site-packages/jep",
@@ -37,7 +37,7 @@ application {
 }
 
 tasks.named<JavaExec>("run") {
-    classpath += files(".venv/lib/python3.10/site-packages/jep/jep-4.2.2.jar")
+    classpath += files(".venv/lib/python3.11/site-packages/jep/jep-4.2.2.jar")
     //classpath += files("libs/json-20231013.jar")
 }
 

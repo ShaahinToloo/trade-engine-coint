@@ -31,6 +31,7 @@ public class CachingMainFeatures {
 	Map<String, double[]> hullStates = new HashMap<>();
 	Map<String, double[]> rsiStates = new HashMap<>();
 	Map<String, double[]> superTrendStates = new HashMap<>();
+	Map<String, double[]> adxStates = new HashMap<>();
 
 	public CachingMainFeatures(double[][] priceMatrix, List<String> dateTimeIndex) {
 		n = priceMatrix[0].length;
@@ -785,6 +786,208 @@ public class CachingMainFeatures {
 
 	public double[] getCustomArray(String key) {
 		return this.features.get(key);
+	}
+
+	public double[] getAverageDirectionalIndex(int period, String source) {
+		return this.features.get("averageDirectionalIndex_" + source + "_" + period);
+	}
+
+	private void averageDirectionalIndex(double[] high, double[] low, double[] close, int period) {
+		this.averageDirectionalIndex(high, low, close, period, "hlc");
+	}
+
+	public void averageDirectionalIndex(double[] high, double[] low, double[] close, int period, String source) {
+		int end = close.length;
+		int start = this.cached ? this.currIdx : 1;
+
+		double[] tr = adxState("tr_", source, period, close.length);
+		double[] pdm = adxState("pdm_", source, period, close.length);
+		double[] mdm = adxState("mdm_", source, period, close.length);
+		double[] str = adxState("str_", source, period, close.length);
+		double[] spdm = adxState("spdm_", source, period, close.length);
+		double[] smdm = adxState("smdm_", source, period, close.length);
+		double[] dxArr = adxState("dx_", source, period, close.length);
+
+		String adxKey = "averageDirectionalIndex_" + source + "_" + period;
+		double[] adx = this.features.get(adxKey);
+		if (adx == null) {
+			adx = new double[close.length];
+			Arrays.fill(adx, Double.NaN);
+			this.features.put(adxKey, adx);
+		}
+
+		if (this.cached) {
+			this.shiftAndAppend(tr, Double.NaN);
+			this.shiftAndAppend(pdm, Double.NaN);
+			this.shiftAndAppend(mdm, Double.NaN);
+			this.shiftAndAppend(str, Double.NaN);
+			this.shiftAndAppend(spdm, Double.NaN);
+			this.shiftAndAppend(smdm, Double.NaN);
+			this.shiftAndAppend(dxArr, Double.NaN);
+			this.shiftAndAppend(adx, Double.NaN);
+		}
+
+		if (!this.cached) {
+			tr[0] = high[0] - low[0];
+			pdm[0] = 0.0;
+			mdm[0] = 0.0;
+		}
+
+		for (int i = start; i < end; i++) {
+			double highLow = high[i] - low[i];
+			double highClose = Math.abs(high[i] - close[i - 1]);
+			double lowClose = Math.abs(low[i] - close[i - 1]);
+			tr[i] = Math.max(highLow, Math.max(highClose, lowClose));
+
+			double upMove = high[i] - high[i - 1];
+			double downMove = low[i - 1] - low[i];
+			pdm[i] = (upMove > downMove && upMove > 0) ? upMove : 0.0;
+			mdm[i] = (downMove > upMove && downMove > 0) ? downMove : 0.0;
+		}
+
+		if (!this.cached) {
+			wilderSmooth(tr, str, period);
+			wilderSmooth(pdm, spdm, period);
+			wilderSmooth(mdm, smdm, period);
+		} else {
+			str[end - 1] = (str[end - 2] * (period - 1) + tr[end - 1]) / period;
+			spdm[end - 1] = (spdm[end - 2] * (period - 1) + pdm[end - 1]) / period;
+			smdm[end - 1] = (smdm[end - 2] * (period - 1) + mdm[end - 1]) / period;
+		}
+
+		int dxStart = this.cached ? end - 1 : period - 1;
+		for (int i = dxStart; i < end; i++) {
+			if (Double.isNaN(str[i]) || str[i] == 0.0) {
+				dxArr[i] = Double.NaN;
+				continue;
+			}
+			double plusDI = 100.0 * spdm[i] / str[i];
+			double minusDI = 100.0 * smdm[i] / str[i];
+			double sum = plusDI + minusDI;
+			dxArr[i] = (sum == 0.0) ? 0.0 : 100.0 * Math.abs(plusDI - minusDI) / sum;
+		}
+
+		if (this.cached) {
+			double prev = adx[end - 2];
+			if (Double.isNaN(prev) || Double.isNaN(dxArr[end - 1])) {
+				adx[end - 1] = Double.NaN;
+			} else {
+				adx[end - 1] = (prev * (period - 1) + dxArr[end - 1]) / period;
+			}
+		} else {
+			int dxCount = end - (period - 1);
+			if (dxCount >= period) {
+				int firstAdxIdx = (period - 1) + period - 1;
+				double sum = 0.0;
+				boolean valid = true;
+				for (int i = period - 1; i <= firstAdxIdx; i++) {
+					if (Double.isNaN(dxArr[i])) {
+						valid = false;
+						break;
+					}
+					sum += dxArr[i];
+				}
+				if (valid) {
+					adx[firstAdxIdx] = sum / period;
+					for (int i = firstAdxIdx + 1; i < end; i++) {
+						adx[i] = (adx[i - 1] * (period - 1) + dxArr[i]) / period;
+					}
+				}
+			}
+		}
+	}
+
+	private double[] adxState(String prefix, String source, int period, int length) {
+		String key = prefix + source + "_" + period;
+		double[] arr = this.adxStates.get(key);
+		if (arr == null) {
+			arr = new double[length];
+			Arrays.fill(arr, Double.NaN);
+			this.adxStates.put(key, arr);
+		}
+		return arr;
+	}
+
+	private void wilderSmooth(double[] input, double[] output, int period) {
+		double sum = 0.0;
+		for (int i = 0; i < period; i++) {
+			sum += input[i];
+		}
+		output[period - 1] = sum / period;
+		for (int i = period; i < input.length; i++) {
+			output[i] = (output[i - 1] * (period - 1) + input[i]) / period;
+		}
+	}
+
+	public static double[] computeAdxSeries(double[] high, double[] low, double[] close, int period) {
+		int n = close.length;
+		double[] adx = new double[n];
+		Arrays.fill(adx, Double.NaN);
+		if (n < 2 * period) {
+			return adx;
+		}
+
+		double[] tr = new double[n];
+		double[] pdm = new double[n];
+		double[] mdm = new double[n];
+		tr[0] = high[0] - low[0];
+		for (int i = 1; i < n; i++) {
+			double highLow = high[i] - low[i];
+			double highClose = Math.abs(high[i] - close[i - 1]);
+			double lowClose = Math.abs(low[i] - close[i - 1]);
+			tr[i] = Math.max(highLow, Math.max(highClose, lowClose));
+
+			double upMove = high[i] - high[i - 1];
+			double downMove = low[i - 1] - low[i];
+			pdm[i] = (upMove > downMove && upMove > 0) ? upMove : 0.0;
+			mdm[i] = (downMove > upMove && downMove > 0) ? downMove : 0.0;
+		}
+
+		double[] str = new double[n];
+		double[] spdm = new double[n];
+		double[] smdm = new double[n];
+		Arrays.fill(str, Double.NaN);
+		Arrays.fill(spdm, Double.NaN);
+		Arrays.fill(smdm, Double.NaN);
+
+		double sumTr = 0.0, sumP = 0.0, sumM = 0.0;
+		for (int i = 0; i < period; i++) {
+			sumTr += tr[i];
+			sumP += pdm[i];
+			sumM += mdm[i];
+		}
+		str[period - 1] = sumTr / period;
+		spdm[period - 1] = sumP / period;
+		smdm[period - 1] = sumM / period;
+		for (int i = period; i < n; i++) {
+			str[i] = (str[i - 1] * (period - 1) + tr[i]) / period;
+			spdm[i] = (spdm[i - 1] * (period - 1) + pdm[i]) / period;
+			smdm[i] = (smdm[i - 1] * (period - 1) + mdm[i]) / period;
+		}
+
+		double[] dx = new double[n];
+		Arrays.fill(dx, Double.NaN);
+		for (int i = period - 1; i < n; i++) {
+			if (str[i] == 0.0) {
+				dx[i] = 0.0;
+				continue;
+			}
+			double plusDI = 100.0 * spdm[i] / str[i];
+			double minusDI = 100.0 * smdm[i] / str[i];
+			double sum = plusDI + minusDI;
+			dx[i] = (sum == 0.0) ? 0.0 : 100.0 * Math.abs(plusDI - minusDI) / sum;
+		}
+
+		int firstAdxIdx = 2 * period - 2;
+		double sumDx = 0.0;
+		for (int i = period - 1; i <= firstAdxIdx; i++) {
+			sumDx += dx[i];
+		}
+		adx[firstAdxIdx] = sumDx / period;
+		for (int i = firstAdxIdx + 1; i < n; i++) {
+			adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period;
+		}
+		return adx;
 	}
 
 	public double[] getSimpleMovingAverage(int period, String source) {

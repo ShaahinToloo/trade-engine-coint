@@ -9,7 +9,7 @@ import java.util.Map;
 import engine.timeUtils.TimeUtils;
 
 public sealed class PublicConstants permits ExecutionConstants, BacktestConstants {
-    public static final String MAIN_FOLDER = "/home/ubuntu/resources/outputs/data/BBMR/";
+    public static final String MAIN_FOLDER = "/root/resources/outputs/data/BBMR/";
 
     public static final String DATA_LOG_PATH = MAIN_FOLDER;
 
@@ -18,16 +18,16 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
 
     // in qouted currency | Must be positive! | If your
     // provider has a 2-sided commission, you must multiply
-    // this nunmber by 2 in here. If you dont know what is a
+    // this nunmber by 2 in here. If you don't know what is a
     // 2 or 1 sided commission is. DO ASK an AI NOW!
     public static final double[] COMMISION_PER_UNIT = new double[10];
     private static final boolean TWO_SIDED_COMM = false;
     
 	// Order matters && for reversed currencies recompute spread manually and put it
 	// here
-    public static final double[] SPREADS = new double[] { 0.00003, 0.00001, 0.00003, 0, 0, 0, 0, 0, 0, 0 };
+    public static final double[] SPREADS = new double[] { 0.00002, 0.00002, 0.00002, 0.00002, 0.00002, 0, 0, 0, 0, 0 };
 
-    public static double ENTERY_Z_SCORE = 3.5;
+    public static double ENTERY_Z_SCORE = 2.0;
     public static double EXIT_Z_SCORE = -1.0; // '-' sign means "in the opposite side"
 
     public static final int MR_LOOKBACK = 120;

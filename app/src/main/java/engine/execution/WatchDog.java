@@ -1,5 +1,6 @@
 package engine.execution;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -8,7 +9,7 @@ import engine.heads.BBExecutionEngine;
 import engine.heads.ExecutionEngine;
 import engine.logger.InfoLogger;
 
-class Watchdog implements Runnable {
+class WatchDog implements Runnable {
 
     private final ExecutionEngine engine;
     private final AtomicLong lastHeartbeat = new AtomicLong(0);
@@ -17,8 +18,9 @@ class Watchdog implements Runnable {
 
     InfoLogger log = new InfoLogger(Path.of(PublicConstants.INFO_LOG_PATH, "Execution/").toString(), PublicConstants.INFO_LOG_NAME);
 
-    public Watchdog(double[][][] mohlcv, List<String> datetimeIndex) {
-        this.engine = new BBExecutionEngine(mohlcv, datetimeIndex);
+    public WatchDog(double[][][] mohlcv, List<String> datetimeIndex) {
+//        this.engine = new BBExecutionEngine(mohlcv, datetimeIndex);
+        this.engine = new BBExecutionEngine();
     }
 
     @Override

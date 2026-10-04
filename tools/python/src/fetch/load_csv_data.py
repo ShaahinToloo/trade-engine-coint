@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-base_path = Path("/home/ubuntu/resources/SymbolsData/Portfolio")
+base_path = Path("/root/resources/SymbolsData/Portfolio")
 df_paths = sorted(
     [
         f
@@ -17,7 +17,7 @@ unified_index = None
 ret_list = []
 
 QUOTED_CURRENCY = "USD"
-DATAFRAME_SEAPARTOR = "\t"
+DATAFRAME_SEAPARTOR = ","
 
 
 def _resample_ohlcv(dfs: list, timeframe: str):
@@ -30,7 +30,7 @@ def _resample_ohlcv(dfs: list, timeframe: str):
                 "<HIGH>": "max",
                 "<LOW>": "min",
                 "<CLOSE>": "last",
-                "<TICKVOL>": "sum",
+                "<VOL>": "sum",
             }
         )
 
@@ -51,6 +51,7 @@ def _parse_indices(dfs: list):
         )
         dfs[i].set_index(time_col_name, inplace=True)
         dfs[i].index = pd.to_datetime(dfs[i].index)
+        dfs[i] = dfs[i][~dfs[i].index.duplicated(keep="first")]
     return dfs
 
 

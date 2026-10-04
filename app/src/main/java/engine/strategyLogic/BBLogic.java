@@ -3,13 +3,17 @@ package engine.strategyLogic;
 import java.util.List;
 
 import engine.constants.BacktestConstants;
+import engine.data.feature.CachingMainFeatures;
 import engine.trade.Trade;
 
 public class BBLogic extends Logic {
-    public double zScoreAsk, zScoreBid;
+    public double zScoreAsk = Double.NaN, zScoreBid = Double.NaN;
+    public double prevZScoreAsk = Double.NaN, prevZScoreBid = Double.NaN;
     public double lastAvg = Double.NaN, lastStd = Double.NaN;
+    public double adx = Double.NaN;
 
     private final double entryZscore, exitZscore;
+    private double stopZscore = 30.2;
 
     public BBLogic(double entryZscore, double exitZscore) {
         super();
@@ -30,11 +34,33 @@ public class BBLogic extends Logic {
             this.lastStd = currStd;
         }
 
+//        this.zScoreAsk = (ask[i] - this.lastAvg) / this.lastStd;
+//        this.zScoreBid = (bid[i] - this.lastAvg) / this.lastStd;
+//
+//        boolean longsEntry = zScoreAsk <= -entryZscore;
+//        boolean shortsEntry = zScoreBid >= entryZscore;
+
+        this.prevZScoreAsk = this.zScoreAsk;
+        this.prevZScoreBid = this.zScoreBid;
+
         this.zScoreAsk = (ask[i] - this.lastAvg) / this.lastStd;
         this.zScoreBid = (bid[i] - this.lastAvg) / this.lastStd;
 
-        boolean longsEntry = zScoreAsk <= -entryZscore;
-        boolean shortsEntry = zScoreBid >= entryZscore;
+        double[] adxSeries = CachingMainFeatures.computeAdxSeries(bid, bid, bid, 14);
+        this.adx = adxSeries[adxSeries.length - 1];
+
+        // شرط مومنتوم: Z-Score باید تغییر جهت داده و به سمت صفر حرکت کرده باشد
+        boolean isAskTurningUp = !Double.isNaN(this.prevZScoreAsk) && (this.zScoreAsk > this.prevZScoreAsk);
+        boolean isBidTurningDown = !Double.isNaN(this.prevZScoreBid) && (this.zScoreBid < this.prevZScoreBid);
+
+        double maxAdxThreshold = 20.0;
+        boolean isAdxAllowed = false;
+        if (!Double.isNaN(this.adx)) {
+            isAdxAllowed = this.adx < maxAdxThreshold;
+        }
+
+        boolean longsEntry = (zScoreAsk <= -entryZscore) && isAskTurningUp && isAdxAllowed;
+        boolean shortsEntry = (zScoreBid >= entryZscore) && isBidTurningDown && isAdxAllowed;
 
         if (longsEntry) {
             tradeType = 1;
@@ -61,12 +87,14 @@ public class BBLogic extends Logic {
         for (int i = 0; i < tradesSize; i++) {
             Trade trade = openTrades.get(i);
 
-            if (trade.type == 1) {
-                if (this.zScoreBid >= -this.exitZscore) {
+            if (trade.type == 1) { // پوزیشن Long
+                // خروج با تارگت سود OR خروج اضطراری با حد ضرر Z-Score (وقتی اسپرد واگرا‌تر می‌شود)
+                if (this.zScoreBid >= -this.exitZscore || this.zScoreBid <= -this.stopZscore) {
                     out[i] = 1;
                 }
-            } else {
-                if (this.zScoreAsk <= this.exitZscore) {
+            } else { // پوزیشن Short
+                // خروج با تارگت سود OR خروج اضطراری با حد ضرر Z-Score (وقتی اسپرد واگرا‌تر می‌شود)
+                if (this.zScoreAsk <= this.exitZscore || this.zScoreAsk >= this.stopZscore) {
                     out[i] = 1;
                 }
             }

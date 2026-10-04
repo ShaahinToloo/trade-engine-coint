@@ -2,11 +2,22 @@ import numpy as np
 import pandas as pd
 import mplfinance as mpf
 import matplotlib
+import matplotlib
+matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 import os
 
 
-CSV_PATH = str(input("Full Path to desired log folder: "))
+_BASE = "/root/resources/outputs/data/BBMR/BackTest"
+_runs = [
+    d
+    for d in os.listdir(_BASE)
+    if os.path.isdir(os.path.join(_BASE, d)) and d.isdigit()
+]
+if not _runs:
+    raise SystemExit(f"No run folders found under {_BASE}")
+CSV_PATH = os.path.join(_BASE, max(_runs, key=int))
+print("Plotting:", CSV_PATH)
 
 
 def check_equity():

@@ -185,6 +185,26 @@ public abstract class ExecutionEngine implements Runnable {
         headState.buffers.datetimeIndex = newIndex.get(0);
     }
 
+    protected int[] getIndicesToEliminate(int[] tradeIndicesToEliminate) {
+        int numToClose = 0;
+
+        for (int j = 0; j < tradeIndicesToEliminate.length; j++) {
+            if (tradeIndicesToEliminate[j] == 1) {
+                numToClose++;
+            }
+        }
+
+        int[] newTradeIndicesToEliminate = new int[numToClose];
+
+        for (int j = tradeIndicesToEliminate.length - 1; j > -1; j--) {
+            if (tradeIndicesToEliminate[j] == 1) {
+                newTradeIndicesToEliminate[--numToClose] = j;
+            }
+        }
+
+        return newTradeIndicesToEliminate;
+    }
+
     protected abstract void processExecutionCycle();
 
     /**

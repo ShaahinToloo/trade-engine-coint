@@ -11,6 +11,8 @@ public class KeyValMain {
     public static final String SMA_2_YPORT = KeyGen.build().type("sma").period(2).source("yPort").build();
     public static final String SMA_3_SMA_2_YPORT = KeyGen.build().type("sma").period(3).source("simpleMovingAverage_yPort_2").build();
 
+    public static final String ADX_14_HLCC = KeyGen.build().type("adx").period(14).source("hlc").build();
+
     static {
     }
 }
