@@ -27,7 +27,7 @@ public class BBBacktest extends Backtest {
 				+ ", dateTimeSlice size=" + dateTimeSlice.size()
 				+ ", from=" + dateTimeSlice.get(0)
 				+ ", to=" + dateTimeSlice.get(dateTimeSlice.size() - 1)
-				+ ", ENTERY_Z_SCORE=" + BacktestConstants.ENTERY_Z_SCORE
+				+ ", ENTERY_Z_SCORE=" + BacktestConstants.ENTRY_Z_SCORE
 				+ ", EXIT_Z_SCORE=" + BacktestConstants.EXIT_Z_SCORE;
 //		log.info(initMsg);
 		System.out.println(initMsg);
@@ -38,7 +38,7 @@ public class BBBacktest extends Backtest {
 				priceMatrix,
 				dateTimeSlice,
 				logger.getRunPath(),
-				BacktestConstants.ENTERY_Z_SCORE,
+				BacktestConstants.ENTRY_Z_SCORE,
 				BacktestConstants.EXIT_Z_SCORE);
 
 		ProgressReporter.printElapsedNanoTime(

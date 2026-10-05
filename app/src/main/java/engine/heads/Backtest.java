@@ -304,7 +304,7 @@ public abstract class Backtest {
 	}
 
 	private void newTrade(Trade trade) {
-		boolean isThereSpace = TradeManager.openTradesSize() < BacktestConstants.MAX_SIMUTANIOUS_TRADES;
+		boolean isThereSpace = TradeManager.openTradesSize() < BacktestConstants.MAX_SIMULTANEOUS_TRADES;
 		if (isThereSpace) {
 			TradeManager.addTrade(trade);
 		}

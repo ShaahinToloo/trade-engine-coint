@@ -134,7 +134,7 @@ public class Trade {
 
         double sumCommission = 0.0; // its Always negative
         for (int i = 0; i < absBeta.length; i++) {
-            sumCommission -= (absBeta[i] * BacktestConstants.COMMISION_PER_UNIT[i]);
+            sumCommission -= (absBeta[i] * BacktestConstants.COMMISSION_PER_UNIT[i]);
         }
 
         this.pnl += sumCommission; // Sums with a negative variable

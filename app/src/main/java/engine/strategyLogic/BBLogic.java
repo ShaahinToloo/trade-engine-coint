@@ -50,22 +50,25 @@ public class BBLogic extends Logic {
         this.adx = adxSeries[adxSeries.length - 1];
 
         // شرط مومنتوم: Z-Score باید تغییر جهت داده و به سمت صفر حرکت کرده باشد
-        boolean isAskTurningUp = !Double.isNaN(this.prevZScoreAsk) && (this.zScoreAsk > this.prevZScoreAsk);
-        boolean isBidTurningDown = !Double.isNaN(this.prevZScoreBid) && (this.zScoreBid < this.prevZScoreBid);
+//        boolean isAskTurningUp = !Double.isNaN(this.prevZScoreAsk) && (this.zScoreAsk > this.prevZScoreAsk);
+//        boolean isBidTurningDown = !Double.isNaN(this.prevZScoreBid) && (this.zScoreBid < this.prevZScoreBid);
+//
+//        double maxAdxThreshold = 25.0;
+//        boolean isAdxAllowed = false;
+//        if (!Double.isNaN(this.adx)) {
+//            isAdxAllowed = this.adx < maxAdxThreshold;
+//        }
+//
+//        boolean longsEntry = (zScoreAsk <= -entryZscore) && isAskTurningUp && isAdxAllowed;
+//        boolean shortsEntry = (zScoreBid >= entryZscore) && isBidTurningDown && isAdxAllowed;
 
-        double maxAdxThreshold = 20.0;
-        boolean isAdxAllowed = false;
-        if (!Double.isNaN(this.adx)) {
-            isAdxAllowed = this.adx < maxAdxThreshold;
-        }
+        boolean longsEntry = (zScoreAsk <= -entryZscore);
+        boolean shortsEntry = (zScoreBid >= entryZscore);
 
-        boolean longsEntry = (zScoreAsk <= -entryZscore) && isAskTurningUp && isAdxAllowed;
-        boolean shortsEntry = (zScoreBid >= entryZscore) && isBidTurningDown && isAdxAllowed;
-
-        if (longsEntry) {
+        if (longsEntry) { // longsEntry
             tradeType = 1;
             entry = ask[i];
-        } else if (shortsEntry) {
+        } else if (shortsEntry) { // shortsEntry
             tradeType = 0;
             entry = bid[i];
         }
@@ -83,6 +86,14 @@ public class BBLogic extends Logic {
 
     public int[] processOpenTradesForExit(List<Trade> openTrades, int[] out) {
         int tradesSize = out.length;
+
+        for (int i = 0; i < tradesSize; i++) {
+            Trade trade = openTrades.get(i);
+
+            if (trade.pnl > 0) {
+                out[i] = 1;
+            }
+        }
 
         for (int i = 0; i < tradesSize; i++) {
             Trade trade = openTrades.get(i);

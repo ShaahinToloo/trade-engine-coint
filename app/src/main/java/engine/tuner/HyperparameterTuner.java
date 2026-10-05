@@ -101,7 +101,7 @@ public class HyperparameterTuner {
     }
 
     private void overrideConstants(double entry, double exit, int seq, int period) {
-        BacktestConstants.ENTERY_Z_SCORE = entry;
+        BacktestConstants.ENTRY_Z_SCORE = entry;
         BacktestConstants.EXIT_Z_SCORE = exit;
         BacktestConstants.SEQ_LENGTH = seq;
         BacktestConstants.TESTS_PERIOD = period;

@@ -34,7 +34,7 @@ public class BBExecutionEngine extends ExecutionEngine {
                 headState.market.priceMatrix,
                 headState.market.datetimeIndex,
                 super.logger.getRunPath(),
-                BacktestConstants.ENTERY_Z_SCORE,
+                BacktestConstants.ENTRY_Z_SCORE,
                 BacktestConstants.EXIT_Z_SCORE);
 
         ProgressReporter.printElapsedNanoTime(
