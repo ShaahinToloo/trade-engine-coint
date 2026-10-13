@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import engine.constants.PublicConstants;
+
 /**
  * Manages all trade lifecycle operations.
  * 
@@ -51,14 +53,141 @@ public class TradeManager {
     public static final List<Trade> recClosedTrades = new ArrayList<>();
 
     /**
-     * Adds a new trade to open trades.
+     * Day PnL as FRACTION of INIT_BALANCE (open + closed trades entered on the
+     * candidate trade's day, e.g. 0.01 = +1%). Refreshed on every
+     * {@link #addTrade} call.
+     */
+    public static double lastDayPnl = 0.0;
+
+    /**
+     * Month PnL as FRACTION of INIT_BALANCE (open + closed trades entered in
+     * the candidate trade's month, e.g. 0.01 = +1%). Refreshed on every
+     * {@link #addTrade} call.
+     */
+    public static double lastMonthPnl = 0.0;
+
+    /**
+     * Number of open + closed trades entered on the candidate trade's day.
+     * Refreshed on every {@link #addTrade} call.
+     */
+    public static int lastDayTradeCount = 0;
+
+    /**
+     * Adds a new trade to open trades, unless a daily/monthly guard blocks it.
+     *
+     * <p>
+     * A rejected trade is dropped completely: it is added nowhere else, and
+     * since it never enters {@code openTrades}, elimination indices built from
+     * {@code openTrades} stay aligned.
+     * </p>
      *
      * @param trade trade to add
+     * @return true if the trade was added, false if blocked
      */
-    public static void addTrade(Trade trade) {
-        if (trade != null) {
-            openTrades.add(trade);
+    public static boolean addTrade(Trade trade) {
+        if (trade == null) {
+            return false;
         }
+        if (!canOpenTrade(trade)) {
+            return false;
+        }
+        openTrades.add(trade);
+        // Count the newly accepted trade in the current day bucket.
+        lastDayTradeCount++;
+        return true;
+    }
+
+    /**
+     * Checks daily/monthly profit, drawdown and trade-count guards.
+     *
+     * @param trade candidate trade (its timestamp defines the day/month window)
+     * @return true if the trade may be opened
+     */
+    public static boolean canOpenTrade(Trade trade) {
+        if (trade == null) {
+            return false;
+        }
+        if (trade.timestamp == null) {
+            return true;
+        }
+        refreshTrackers(trade.timestamp);
+
+        if (lastDayTradeCount >= PublicConstants.MAX_TRADES_PER_DAY) {
+            return false;
+        }
+        if (lastDayPnl >= PublicConstants.DAILY_MAX_PROFIT) {
+            return false;
+        }
+        if (lastDayPnl <= PublicConstants.DAILY_MAX_DD) {
+            return false;
+        }
+        if (lastMonthPnl >= PublicConstants.MONTHLY_MAX_PROFIT) {
+            return false;
+        }
+        if (lastMonthPnl <= PublicConstants.MONTHLY_MAX_DD) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Recomputes day/month PnL (as FRACTION of INIT_BALANCE) and day trade count
+     * for the given reference timestamp by scanning open + closed trades
+     * entered in the same window. Floating PnL is included since open trades
+     * carry live pnl.
+     */
+    private static void refreshTrackers(Timestamp ref) {
+        double dayPnl = 0.0;
+        double monthPnl = 0.0;
+        int dayCount = 0;
+
+        for (Trade t : openTrades) {
+            if (t.timestamp == null) {
+                continue;
+            }
+            if (t.timestamp.isSameDay(ref)) {
+                dayPnl += t.pnl;
+                dayCount++;
+            }
+            if (t.timestamp.isSameMonth(ref)) {
+                monthPnl += t.pnl;
+            }
+        }
+        for (Trade t : closedTrades) {
+            if (t.timestamp == null) {
+                continue;
+            }
+            if (t.timestamp.isSameDay(ref)) {
+                dayPnl += t.pnl;
+                dayCount++;
+            }
+            if (t.timestamp.isSameMonth(ref)) {
+                monthPnl += t.pnl;
+            }
+        }
+
+        lastDayPnl = toFraction(dayPnl);
+        lastMonthPnl = toFraction(monthPnl);
+        lastDayTradeCount = dayCount;
+    }
+
+    /**
+     * Converts a dollar PnL into a fraction of INIT_BALANCE (0.01 = 1%).
+     */
+    private static double toFraction(double pnlDollars) {
+        if (PublicConstants.INIT_BALANCE == 0.0) {
+            return 0.0;
+        }
+        return pnlDollars / PublicConstants.INIT_BALANCE;
+    }
+
+    /**
+     * Resets tracker fields (used when starting a fresh backtest run).
+     */
+    public static void resetTrackers() {
+        lastDayPnl = 0.0;
+        lastMonthPnl = 0.0;
+        lastDayTradeCount = 0;
     }
 
     /**

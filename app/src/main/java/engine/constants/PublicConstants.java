@@ -50,6 +50,15 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
     public static final double STOP_LOSS = -0.5; // Must be negative!
     public static int MAX_SIMULTANEOUS_TRADES = 1;
 
+    // Daily/monthly PnL guards, as FRACTION of INIT_BALANCE.
+    // E.g. 0.01 = +1%, -0.03 = -3%. DD limits MUST stay negative.
+    // Infinity disables the corresponding guard.
+    public static double DAILY_MAX_PROFIT = 0.01; // 1%
+    public static double DAILY_MAX_DD = -0.03; // Must be negative! -3%
+    public static double MONTHLY_MAX_PROFIT = 0.04; // 4%
+    public static double MONTHLY_MAX_DD = -0.06; // Must be negative! -6%
+    public static int MAX_TRADES_PER_DAY = 10;
+
     public static final double EPSILON = 1e-9;
 	public static final int EV_BINS = 20;
 	public static final double TIMEFRAME_MINUTES = 1;

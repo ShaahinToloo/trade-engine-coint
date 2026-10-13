@@ -40,6 +40,8 @@ public class Trade {
     public double pnl = 0.0;
     public double diff_pnl = 0.0;
 
+    public final Timestamp timestamp;
+
     /**
      * Dummy Constructor for fake trades
      */
@@ -48,6 +50,7 @@ public class Trade {
         this.entryIdx = -1;
         this.entryPrice = Double.NaN;
         this.type = -1;
+        this.timestamp = null;
     }
 
     /**
@@ -61,12 +64,45 @@ public class Trade {
             int entryIdx,
             double entryPrice,
             int type) {
+        this(entryIdx, entryPrice, type, (Timestamp) null);
+    }
+
+    /**
+     * Creates a new trade with a datetime string.
+     *
+     * @param entryIdx    candle index of entry
+     * @param entryPrice  entry price
+     * @param type        trade direction/type
+     * @param datetimeStr entry datetime, {@code "yyyy-MM-dd HH:mm:ss"}
+     */
+    public Trade(
+            int entryIdx,
+            double entryPrice,
+            int type,
+            String datetimeStr) {
+        this(entryIdx, entryPrice, type, Timestamp.from(datetimeStr));
+    }
+
+    /**
+     * Creates a new trade with a Timestamp.
+     *
+     * @param entryIdx   candle index of entry
+     * @param entryPrice entry price
+     * @param type       trade direction/type
+     * @param timestamp  entry timestamp
+     */
+    public Trade(
+            int entryIdx,
+            double entryPrice,
+            int type,
+            Timestamp timestamp) {
 
         this.id = NEXT_ID++;
 
         this.entryIdx = entryIdx;
         this.entryPrice = entryPrice;
         this.type = type;
+        this.timestamp = timestamp;
 
         initialPnL();
     }

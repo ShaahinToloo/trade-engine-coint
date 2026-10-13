@@ -116,7 +116,7 @@ public abstract class Core {
 			}
 		}
 
-		generateTradeOuter(outerLoopIdx);
+		generateTradeOuter(outerLoopIdx, datetimeIndex);
 		processDataForSaving(datetimeIndex, TradeContext.trade);
 	}
 
@@ -134,13 +134,13 @@ public abstract class Core {
 	 */
 	protected abstract boolean isWithinTradingWindow();
 
-	protected abstract void generateTrade(int outerLoopIdx);
+	protected abstract void generateTrade(int outerLoopIdx, String datetime);
 
-	private void generateTradeOuter(int outerLoopIdx) {
+	private void generateTradeOuter(int outerLoopIdx, String datetime) {
 		TradeContext.trade = null;
 		boolean timeAgreement = isWithinTradingWindow();
 		if (canTrade && timeAgreement) {
-			generateTrade(outerLoopIdx);
+			generateTrade(outerLoopIdx, datetime);
 		}
 	}
 
