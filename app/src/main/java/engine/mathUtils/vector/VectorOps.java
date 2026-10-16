@@ -63,6 +63,28 @@ public class VectorOps {
         return arr;
     }
 
+    /**
+     * Multiplies every element by a scalar.
+     *
+     * @param x     input array
+     * @param s     scalar multiplier
+     * @param clone if true, returns a new array (input untouched)
+     * @return scaled array
+     */
+    public static double[] scale(
+            double[] x,
+            double s,
+            boolean clone) {
+
+        double[] arr = (clone) ? x.clone() : x;
+
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] *= s;
+        }
+
+        return arr;
+    }
+
 	private static void shiftAndAppend(double[] arr, double[] values, int k) {
         if (k == 0)
             return;

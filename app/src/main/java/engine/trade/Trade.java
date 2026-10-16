@@ -43,6 +43,24 @@ public class Trade {
     public final Timestamp timestamp;
 
     /**
+     * Beta multiplier applied at entry (volatility-targeted sizing).
+     * Live yPort prices are divided by the current multiplier and re-scaled
+     * by this frozen value, so later multiplier changes never distort PnL.
+     */
+    public final double betaMultiplier;
+
+    /**
+     * Entry price expressed in unit-beta terms ({@code entryPrice / betaMultiplier}).
+     */
+    public final double entryUnitPrice;
+
+    /**
+     * Frozen scaled beta at entry, used for commissions. Null for legacy
+     * trades (falls back to the live beta).
+     */
+    public final double[] entryBeta;
+
+    /**
      * Dummy Constructor for fake trades
      */
     public Trade() {
@@ -51,6 +69,9 @@ public class Trade {
         this.entryPrice = Double.NaN;
         this.type = -1;
         this.timestamp = null;
+        this.betaMultiplier = 1.0;
+        this.entryUnitPrice = Double.NaN;
+        this.entryBeta = null;
     }
 
     /**
@@ -97,12 +118,56 @@ public class Trade {
             int type,
             Timestamp timestamp) {
 
+        this(entryIdx, entryPrice, type, timestamp, 1.0, null);
+    }
+
+    /**
+     * Creates a sized trade with a datetime string.
+     *
+     * @param entryIdx      candle index of entry
+     * @param entryPrice    entry price (already scaled by betaMultiplier)
+     * @param type          trade direction/type
+     * @param datetimeStr   entry datetime, {@code "yyyy-MM-dd HH:mm:ss"}
+     * @param betaMultiplier multiplier applied to beta at entry (must be positive)
+     * @param betaAtEntry   scaled beta at entry, used for commissions (cloned)
+     */
+    public Trade(
+            int entryIdx,
+            double entryPrice,
+            int type,
+            String datetimeStr,
+            double betaMultiplier,
+            double[] betaAtEntry) {
+        this(entryIdx, entryPrice, type, Timestamp.from(datetimeStr), betaMultiplier, betaAtEntry);
+    }
+
+    /**
+     * Creates a new trade with volatility-targeted sizing.
+     *
+     * @param entryIdx      candle index of entry
+     * @param entryPrice    entry price (already scaled by betaMultiplier)
+     * @param type          trade direction/type
+     * @param timestamp     entry timestamp
+     * @param betaMultiplier multiplier applied to beta at entry (must be positive)
+     * @param betaAtEntry   scaled beta at entry, used for commissions (cloned)
+     */
+    public Trade(
+            int entryIdx,
+            double entryPrice,
+            int type,
+            Timestamp timestamp,
+            double betaMultiplier,
+            double[] betaAtEntry) {
+
         this.id = NEXT_ID++;
 
         this.entryIdx = entryIdx;
         this.entryPrice = entryPrice;
         this.type = type;
         this.timestamp = timestamp;
+        this.betaMultiplier = betaMultiplier;
+        this.entryUnitPrice = entryPrice / betaMultiplier;
+        this.entryBeta = (betaAtEntry != null) ? betaAtEntry.clone() : null;
 
         initialPnL();
     }
@@ -114,22 +179,36 @@ public class Trade {
     /**
      * Updates live unrealized PnL using current market price.
      *
-     * @param currentBidPrice current market price
+     * @param currentBidPrice    current market price (scaled by currentMultiplier)
+     * @param currentMultiplier beta multiplier of the live series
      */
-    public void update(double currentBidPrice, double currentAskPrice, double[] beta) {
+    public void update(double currentBidPrice, double currentAskPrice, double[] beta, double currentMultiplier) {
         if (closed) {
             return;
         }
         double lastPnl = this.pnl;
 
+        // Re-scale live prices into this trade's frozen entry scale.
+        double scale = currentMultiplier / this.betaMultiplier;
+        double bid = currentBidPrice / scale;
+        double ask = currentAskPrice / scale;
+
         switch (this.type) {
-            case 1 -> this.pnl = BacktestConstants.longPnL(currentBidPrice, this.entryPrice);
-            case 0 -> this.pnl = BacktestConstants.shortPnL(currentAskPrice, this.entryPrice);
+            case 1 -> this.pnl = BacktestConstants.longPnL(bid, this.entryPrice);
+            case 0 -> this.pnl = BacktestConstants.shortPnL(ask, this.entryPrice);
         }
 
-        computeCommissions(beta);
+        computeCommissions((this.entryBeta != null) ? this.entryBeta : beta);
 
         this.diff_pnl = this.pnl - lastPnl;
+    }
+
+    /**
+     * Legacy update assuming the live series carries this trade's own scale.
+     * Equivalent to {@code update(bid, ask, beta, this.betaMultiplier)}.
+     */
+    public void update(double currentBidPrice, double currentAskPrice, double[] beta) {
+        update(currentBidPrice, currentAskPrice, beta, this.betaMultiplier);
     }
 
     /**

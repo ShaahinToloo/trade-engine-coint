@@ -74,6 +74,10 @@ public class DataLogger {
 	}
 
 	public void logFeatures(String currDatetimeIndex, Trade trade) {
+		logFeatures(currDatetimeIndex, trade, Double.NaN, Double.NaN);
+	}
+
+	public void logFeatures(String currDatetimeIndex, Trade trade, double betaMultiplier, double sizerSigma) {
 		if (trade == null) {
 			trade = new Trade();
 		}
@@ -97,6 +101,8 @@ public class DataLogger {
 			sb.append(sep).append(trade.entryPrice);
 			sb.append(sep).append(trade.type);
 		}
+		sb.append(sep).append(betaMultiplier);
+		sb.append(sep).append(sizerSigma);
 		sb.append("\n");
 		lineCount += 1;
 		if (lineCount % 5_000 == 0)
@@ -115,6 +121,8 @@ public class DataLogger {
 			}
 			writer.print(sep + "entry");
 			writer.print(sep + "tradeType");
+			writer.print(sep + "betaMult");
+			writer.print(sep + "sizerSigma");
 			writer.println();
 		}
 	}

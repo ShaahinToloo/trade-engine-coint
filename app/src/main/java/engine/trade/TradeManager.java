@@ -67,10 +67,16 @@ public class TradeManager {
     public static double lastMonthPnl = 0.0;
 
     /**
-     * Number of open + closed trades entered on the candidate trade's day.
-     * Refreshed on every {@link #addTrade} call.
+     * Number of profitable (pnl >= 0) open + closed trades entered on the
+     * candidate trade's day. Refreshed on every {@link #addTrade} call.
      */
-    public static int lastDayTradeCount = 0;
+    public static int lastDayProfitableCount = 0;
+
+    /**
+     * Number of losing (pnl < 0) open + closed trades entered on the
+     * candidate trade's day. Refreshed on every {@link #addTrade} call.
+     */
+    public static int lastDayLosingCount = 0;
 
     /**
      * Adds a new trade to open trades, unless a daily/monthly guard blocks it.
@@ -93,7 +99,11 @@ public class TradeManager {
         }
         openTrades.add(trade);
         // Count the newly accepted trade in the current day bucket.
-        lastDayTradeCount++;
+        if (trade.pnl >= 0) {
+            lastDayProfitableCount++;
+        } else {
+            lastDayLosingCount++;
+        }
         return true;
     }
 
@@ -112,7 +122,10 @@ public class TradeManager {
         }
         refreshTrackers(trade.timestamp);
 
-        if (lastDayTradeCount >= PublicConstants.MAX_TRADES_PER_DAY) {
+        if (lastDayProfitableCount >= PublicConstants.MAX_PROFITABLE_TRADES_PER_DAY) {
+            return false;
+        }
+        if (lastDayLosingCount >= PublicConstants.MAX_LOSING_TRADES_PER_DAY) {
             return false;
         }
         if (lastDayPnl >= PublicConstants.DAILY_MAX_PROFIT) {
@@ -131,15 +144,16 @@ public class TradeManager {
     }
 
     /**
-     * Recomputes day/month PnL (as FRACTION of INIT_BALANCE) and day trade count
-     * for the given reference timestamp by scanning open + closed trades
-     * entered in the same window. Floating PnL is included since open trades
-     * carry live pnl.
+     * Recomputes day/month PnL (as FRACTION of INIT_BALANCE) and profitable /
+     * losing day trade counts for the given reference timestamp by scanning
+     * open + closed trades entered in the same window. Floating PnL is
+     * included since open trades carry live pnl.
      */
     private static void refreshTrackers(Timestamp ref) {
         double dayPnl = 0.0;
         double monthPnl = 0.0;
-        int dayCount = 0;
+        int dayProfitable = 0;
+        int dayLosing = 0;
 
         for (Trade t : openTrades) {
             if (t.timestamp == null) {
@@ -147,7 +161,11 @@ public class TradeManager {
             }
             if (t.timestamp.isSameDay(ref)) {
                 dayPnl += t.pnl;
-                dayCount++;
+                if (t.pnl >= 0) {
+                    dayProfitable++;
+                } else {
+                    dayLosing++;
+                }
             }
             if (t.timestamp.isSameMonth(ref)) {
                 monthPnl += t.pnl;
@@ -159,7 +177,11 @@ public class TradeManager {
             }
             if (t.timestamp.isSameDay(ref)) {
                 dayPnl += t.pnl;
-                dayCount++;
+                if (t.pnl >= 0) {
+                    dayProfitable++;
+                } else {
+                    dayLosing++;
+                }
             }
             if (t.timestamp.isSameMonth(ref)) {
                 monthPnl += t.pnl;
@@ -168,7 +190,8 @@ public class TradeManager {
 
         lastDayPnl = toFraction(dayPnl);
         lastMonthPnl = toFraction(monthPnl);
-        lastDayTradeCount = dayCount;
+        lastDayProfitableCount = dayProfitable;
+        lastDayLosingCount = dayLosing;
     }
 
     /**
@@ -187,13 +210,25 @@ public class TradeManager {
     public static void resetTrackers() {
         lastDayPnl = 0.0;
         lastMonthPnl = 0.0;
-        lastDayTradeCount = 0;
+        lastDayProfitableCount = 0;
+        lastDayLosingCount = 0;
     }
 
     /**
      * Updates live PnL for all open trades.
      *
-     * @param currentBidPrice current market price
+     * @param currentBidPrice   current market price (scaled by currentMultiplier)
+     * @param currentMultiplier beta multiplier of the live series
+     */
+    public static void updateOpenTrades(double currentBidPrice, double currentAskPrice, double[] beta,
+            double currentMultiplier) {
+        for (Trade trade : openTrades) {
+            trade.update(currentBidPrice, currentAskPrice, beta, currentMultiplier);
+        }
+    }
+
+    /**
+     * Legacy update assuming the live series carries each trade's own scale.
      */
     public static void updateOpenTrades(double currentBidPrice, double currentAskPrice, double[] beta) {
         for (Trade trade : openTrades) {

@@ -7,10 +7,12 @@ import java.util.List;
 import engine.cointegration.halflife.LookbackCalculator;
 import engine.cointegration.johansen.JohansenResult;
 import engine.cointegration.johansen.JohansenTest;
+import engine.cointegration.portfolio.PositionSizer;
 import engine.constants.PublicConstants;
 import engine.data.feature.CachedFeatureInitializer;
 import engine.logger.DataLogger;
 import engine.mathUtils.normalization.VectorNormalization;
+import engine.mathUtils.vector.VectorOps;
 import engine.trade.Trade;
 import engine.trade.TradeManager;
 
@@ -28,6 +30,13 @@ public abstract class Core {
 	}
 
 	public double[][] yPort;
+
+	/** Beta multiplier applied on the current candle (volatility sizing). */
+	protected double lastBetaMultiplier = 1.0;
+	/** Sigma measured on the unit-beta yPort bid for the current candle. */
+	protected double lastSizerSigma = Double.NaN;
+	/** Scaled beta applied on the current candle (frozen per trade at entry). */
+	protected double[] lastBeta;
 
 	protected final CachedFeatureInitializer cfi;
 	protected JohansenResult jr;
@@ -85,11 +94,25 @@ public abstract class Core {
 			jr = JohansenTest.johansen(PublicConstants.PRICE_MATRIX);
 		}
 
-		double[] beta = getBetaFromJr();
+		double[] oldBeta = getBetaFromJr();
+		this.yPort = this.cfi.calc_yPort(oldBeta);
+
+		// Volatility-targeted sizing on the unit-beta yPort:
+		// low volatility -> larger multiplier and vice versa.
+		PositionSizer.Sizing sizing = PositionSizer.compute(
+				this.yPort[0], PublicConstants.SIZER_LOOKBACK);
+		this.lastBetaMultiplier = sizing.multiplier;
+		this.lastSizerSigma = sizing.sigma;
+
+		// Calc the beta multiplier
+		double[] beta = VectorOps.scale(oldBeta, sizing.multiplier, true);
+		this.lastBeta = beta;
+
 		this.yPort = this.cfi.calc_yPort(beta);
 		this.cfi.updateMainFeatures();
 
-		TradeManager.updateOpenTrades(yPort[0][yPort[0].length - 1], yPort[1][yPort[1].length - 1], beta);
+		TradeManager.updateOpenTrades(yPort[0][yPort[0].length - 1], yPort[1][yPort[1].length - 1], beta,
+				this.lastBetaMultiplier);
 
 		/**
 		 * Here, you can just get the lookbackCalculator out of the box, and adaptively
@@ -171,7 +194,7 @@ public abstract class Core {
 	/* Helpers */
 	public void processDataForSaving(String currDatetimeIndex, Trade trade) {
 		this.methodCall += 1;
-		this.logger.logFeatures(currDatetimeIndex, trade);
+		this.logger.logFeatures(currDatetimeIndex, trade, this.lastBetaMultiplier, this.lastSizerSigma);
 	}
 
 	public void flushLastRows() {

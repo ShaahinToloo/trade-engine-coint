@@ -88,7 +88,8 @@ public class BBCore extends Core {
     @Override
     protected void generateTrade(int outerLoopIdx, String datetime) {
         if (Logic.LogicContext.validTrade) {
-            TradeContext.trade = new Trade(outerLoopIdx, Logic.LogicContext.entry, Logic.LogicContext.tradeType, datetime);
+            TradeContext.trade = new Trade(outerLoopIdx, Logic.LogicContext.entry, Logic.LogicContext.tradeType,
+                    datetime, this.lastBetaMultiplier, this.lastBeta);
         }
     }
 }

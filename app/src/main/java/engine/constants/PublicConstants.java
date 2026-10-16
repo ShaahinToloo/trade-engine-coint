@@ -48,16 +48,32 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
 
     public static final boolean USE_STOP_LOSS = false;
     public static final double STOP_LOSS = -0.5; // Must be negative!
+    public static final boolean USE_PCT_STOP_LOSS = true;
+    public static final double STOP_LOSS_PCT = -0.0005; // Must be negative!
+    public static final boolean USE_PCT_TARGET_PROFIT = true;
+    public static final double TARGET_PROFIT_PCT = 0.0075;
     public static int MAX_SIMULTANEOUS_TRADES = 1;
 
     // Daily/monthly PnL guards, as FRACTION of INIT_BALANCE.
     // E.g. 0.01 = +1%, -0.03 = -3%. DD limits MUST stay negative.
     // Infinity disables the corresponding guard.
-    public static double DAILY_MAX_PROFIT = 0.01; // 1%
+    public static double DAILY_MAX_PROFIT = 0.02; // 1%
     public static double DAILY_MAX_DD = -0.03; // Must be negative! -3%
     public static double MONTHLY_MAX_PROFIT = 0.04; // 4%
     public static double MONTHLY_MAX_DD = -0.06; // Must be negative! -6%
-    public static int MAX_TRADES_PER_DAY = 10;
+    public static int MAX_PROFITABLE_TRADES_PER_DAY = 2;
+    public static int MAX_LOSING_TRADES_PER_DAY = 4;
+
+    // Volatility-targeted position sizing (fraction of INIT_BALANCE).
+    // A half-range adverse move in yPort costs RISK_PER_HALF_RANGE of balance.
+    // E.g. 0.01 = 1%. Must be positive!
+    public static double RISK_PER_HALF_RANGE = 0.001; // Must be positive!
+    // Trailing window (candles) for the yPort-bid sigma estimate.
+    public static int SIZER_LOOKBACK = MR_LOOKBACK;
+    // Clamps for the beta multiplier. Both must be positive, MIN <= MAX!
+    // MAX must cover typical raw m (median ~333 on current sigma scale).
+    public static double MIN_BETA_MULTIPLIER = 0.1; // Must be positive!
+    public static double MAX_BETA_MULTIPLIER = 500.0; // Must be positive!
 
     public static final double EPSILON = 1e-9;
 	public static final int EV_BINS = 20;
@@ -69,6 +85,10 @@ public sealed class PublicConstants permits ExecutionConstants, BacktestConstant
     static {
         double val = 0.00003;
         Arrays.fill(COMMISSION_PER_UNIT, ((TWO_SIDED_COMM) ? val * 2 : val));
+
+        if (INIT_BALANCE <= 0) {
+            throw new IllegalArgumentException("INIT_BALANCE must be > 0");
+        }
     }
 
     public static void sleep(long ms) {

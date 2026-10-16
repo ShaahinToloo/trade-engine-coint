@@ -87,11 +87,33 @@ public class BBLogic extends Logic {
     public int[] processOpenTradesForExit(List<Trade> openTrades, int[] out) {
         int tradesSize = out.length;
 
-        for (int i = 0; i < tradesSize; i++) {
-            Trade trade = openTrades.get(i);
+        if (BacktestConstants.USE_PCT_TARGET_PROFIT) {
+            for (int i = 0; i < tradesSize; i++) {
+                Trade trade = openTrades.get(i);
 
-            if (trade.pnl > 0) {
-                out[i] = 1;
+                if (pnlFraction(trade) >= BacktestConstants.TARGET_PROFIT_PCT) {
+                    out[i] = 1;
+                }
+            }
+        }
+
+//        else {
+//            for (int i = 0; i < tradesSize; i++) {
+//                Trade trade = openTrades.get(i);
+//
+//                if (trade.pnl > 0) {
+//                    out[i] = 1;
+//                }
+//            }
+//        }
+
+        if (BacktestConstants.USE_PCT_STOP_LOSS) {
+            for (int i = 0; i < tradesSize; i++) {
+                Trade trade = openTrades.get(i);
+
+                if (pnlFraction(trade) <= BacktestConstants.STOP_LOSS_PCT) {
+                    out[i] = 1;
+                }
             }
         }
 
@@ -125,6 +147,11 @@ public class BBLogic extends Logic {
     }
 
     /* Helpers */
+    private static double pnlFraction(Trade trade) {
+        double base = BacktestConstants.INIT_BALANCE;
+        return trade.pnl / base;
+    }
+
     private double lastAvg(int lookback) {
 
         int start = Math.max(this.bid.length - lookback, 0);

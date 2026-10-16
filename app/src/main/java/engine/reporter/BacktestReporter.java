@@ -43,6 +43,33 @@ public class BacktestReporter {
                 .average()
                 .orElse(0.0);
 
+        double avgMinusPnl = closedTrades.stream()
+                .mapToDouble(x -> x.pnl)
+                .filter(p -> p < 0)
+                .average()
+                .orElse(0.0);
+
+        double avgPositivePnl = closedTrades.stream()
+                .mapToDouble(x -> x.pnl)
+                .filter(p -> p >= 0)
+                .average()
+                .orElse(0.0);
+
+        double avgUnitSize = closedTrades.stream()
+                .mapToDouble(x -> x.betaMultiplier)
+                .average()
+                .orElse(0.0);
+
+        double minUnitSize = closedTrades.stream()
+                .mapToDouble(x -> x.betaMultiplier)
+                .min()
+                .orElse(0.0);
+
+        double maxUnitSize = closedTrades.stream()
+                .mapToDouble(x -> x.betaMultiplier)
+                .max()
+                .orElse(0.0);
+
         double tradesADay = TradeMetrics.avgTradesPerTradingDay(
                 tradesSum,
                 market.length,
@@ -79,6 +106,11 @@ public class BacktestReporter {
                 portfolio.winningStreak));
 
         sb.append(String.format(
+                "\tAvg Minus PnL ($): %.9f | Avg Positive PnL ($): %.9f\n",
+                avgMinusPnl,
+                avgPositivePnl));
+
+        sb.append(String.format(
                 "\tAvg PnL ($): %.9f\n",
                 avgGain));
 
@@ -99,6 +131,12 @@ public class BacktestReporter {
                 "\tBiggest Loss ($): %.9f | Biggest Profit ($): %.9f\n",
                 biggestLoss,
                 biggestProfit));
+
+        sb.append(String.format(
+                "\tAvg Unit Size: %.4f | Min Unit Size: %.4f | Max Unit Size: %.4f\n",
+                avgUnitSize,
+                minUnitSize,
+                maxUnitSize));
 
         sb.append(String.format(
                 "\tEquity Calmar: %.2f\n",
